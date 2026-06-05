@@ -299,59 +299,9 @@ export default function AppointmentModal({
     }
   };
 
-  const handleCloseWithSave = async () => {
-    if (isSubmitting) return;
-
-    // Check if we have the minimum valid data to perform an automatic save upon overlay backdrop clicked outside
-    const isReadyToSaveInline = isNewPatientInline && newPatientFirstName.trim() && newPatientPhoneNumber.trim();
-    const isReadyToSaveExisting = !isNewPatientInline && patientId;
-
-    if (mode === 'edit' && patientId) {
-      const startDate = new Date(start);
-      if (!isNaN(startDate.getTime())) {
-        const endDate = new Date(startDate.getTime() + 15 * 60 * 1000);
-        setIsSubmitting(true);
-        try {
-          await onSave({
-            id: appointment?.id,
-            patientId,
-            title: 'פגישת ייעוץ',
-            start: startDate.toISOString(),
-            end: endDate.toISOString(),
-            firstReminder,
-            finalConfirmation,
-            notes: notes.trim(),
-            color,
-            arrivalConfirmed,
-            dealClosed,
-            dealAmount: dealClosed && dealAmount.trim() ? Number(dealAmount) : undefined,
-            jawPromotion: dealClosed ? jawPromotion : 'none',
-            noShow,
-            bookedBy: bookedBy.trim(),
-            smsStatus,
-            smsTextSent
-          });
-        } catch (saveError) {
-          setIsSubmitting(false);
-        }
-        return;
-      }
-    } else if (mode === 'create' && (isReadyToSaveInline || isReadyToSaveExisting)) {
-      const startDate = new Date(start);
-      if (!isNaN(startDate.getTime())) {
-        // Auto submit the new appointment when clicking outside
-        handleSubmit();
-        return;
-      }
-    }
-    
-    // If not ready to save, or just canceled, default close
-    onClose();
-  };
-
   return (
     <div 
-      onClick={handleCloseWithSave}
+      onClick={onClose}
       className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in cursor-pointer" 
       id="appointment-modal-overlay" 
       dir="rtl"
@@ -367,12 +317,13 @@ export default function AppointmentModal({
             <h3 className="text-sm font-bold text-slate-800">
               {mode === 'edit' ? 'עדכון פרטי תור' : 'תיאום תור חדש ביומן'}
             </h3>
-            <p className="text-[11px] text-slate-550 font-medium mt-0.5">
+            <p className="text-[11px] text-slate-555 font-medium mt-0.5">
               {mode === 'edit' ? 'בדיקת סטטוס, שינוי שעות טיפול והערות' : 'הקצאת משבצת זמן פנויה למטופל'}
             </p>
           </div>
           <button 
-            onClick={handleCloseWithSave}
+            type="button"
+            onClick={onClose}
             disabled={isSubmitting}
             className={`p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer transition-colors ${
               isSubmitting ? 'opacity-40 cursor-not-allowed' : ''

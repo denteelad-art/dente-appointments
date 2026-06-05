@@ -42,7 +42,8 @@ import { motion, AnimatePresence } from 'motion/react';
 
 /**
  * Custom 80s Rock Anthem Synthesizer in Web Audio API.
- * Synthesizes the motivational "Eye of the Tiger" styled sequence to excite the clinical team.
+ * Synthesizes a premium motivational driving rock anthem with drums (Kick, Snare, Hats)
+ * and deep detuned analog supersaw chords to excite and motivate the team!
  */
 const playDenteRockAnthem = () => {
   try {
@@ -50,79 +51,219 @@ const playDenteRockAnthem = () => {
     if (!AudioContext) return;
     const ctx = new AudioContext();
     
-    // Lowpass filter to make it sound warm and powerful, not harsh
-    const filter = ctx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.setValueAtTime(1000, ctx.currentTime);
-    filter.Q.setValueAtTime(1.2, ctx.currentTime);
+    // Main compression & master glue to blend synthesizers beautifully
+    const compressor = ctx.createDynamicsCompressor();
+    compressor.threshold.setValueAtTime(-14, ctx.currentTime);
+    compressor.knee.setValueAtTime(12, ctx.currentTime);
+    compressor.ratio.setValueAtTime(4, ctx.currentTime);
+    compressor.attack.setValueAtTime(0.003, ctx.currentTime);
+    compressor.release.setValueAtTime(0.08, ctx.currentTime);
     
     const masterGain = ctx.createGain();
-    masterGain.gain.setValueAtTime(0.12, ctx.currentTime); // keep volume sweet and pleasant
+    masterGain.gain.setValueAtTime(0.18, ctx.currentTime); // perfectly balanced sweet dynamic volume
     
-    filter.connect(masterGain);
+    compressor.connect(masterGain);
     masterGain.connect(ctx.destination);
-
-    // Helper to play a synth note
-    const playNote = (freq: number, startTime: number, duration: number, type: 'sawtooth' | 'triangle' = 'sawtooth') => {
+    
+    // Fast generation of high quality white noise for snares and cymbal hats
+    const bufferSize = ctx.sampleRate * 2.0;
+    const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      output[i] = Math.random() * 2 - 1;
+    }
+    
+    // 1. Kick Drum Synthesizer (deep warm punchy sine sweep)
+    const triggerKick = (time: number) => {
       const osc = ctx.createOscillator();
-      const gainNode = ctx.createGain();
+      const gain = ctx.createGain();
       
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
+      osc.connect(gain);
+      gain.connect(compressor);
       
-      // Pitch glide accent for extra synth punch
-      osc.frequency.exponentialRampToValueAtTime(freq * 1.015, ctx.currentTime + startTime + 0.05);
-
-      gainNode.gain.setValueAtTime(0, ctx.currentTime + startTime);
-      gainNode.gain.linearRampToValueAtTime(0.8, ctx.currentTime + startTime + 0.03); // punchy attack
-      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + startTime + duration); // smooth decay
-
-      osc.connect(gainNode);
-      gainNode.connect(filter);
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(140, ctx.currentTime + time);
+      osc.frequency.exponentialRampToValueAtTime(38, ctx.currentTime + time + 0.12);
       
-      osc.start(ctx.currentTime + startTime);
-      osc.stop(ctx.currentTime + startTime + duration);
+      gain.gain.setValueAtTime(0, ctx.currentTime + time);
+      gain.gain.linearRampToValueAtTime(1.0, ctx.currentTime + time + 0.005);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + time + 0.22);
+      
+      osc.start(ctx.currentTime + time);
+      osc.stop(ctx.currentTime + time + 0.25);
+    };
+    
+    // 2. Snare Synthesizer (classic gated rock snare sound)
+    const triggerSnare = (time: number, isHuge = false) => {
+      const noiseNode = ctx.createBufferSource();
+      noiseNode.buffer = noiseBuffer;
+      
+      const noiseFilter = ctx.createBiquadFilter();
+      noiseFilter.type = 'bandpass';
+      noiseFilter.frequency.setValueAtTime(950, ctx.currentTime + time);
+      noiseFilter.Q.setValueAtTime(1.6, ctx.currentTime + time);
+      
+      const noiseGain = ctx.createGain();
+      const snareDecay = isHuge ? 0.38 : 0.26;
+      
+      noiseGain.gain.setValueAtTime(0, ctx.currentTime + time);
+      noiseGain.gain.linearRampToValueAtTime(0.42, ctx.currentTime + time + 0.008);
+      noiseGain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + time + snareDecay);
+      
+      noiseNode.connect(noiseFilter);
+      noiseFilter.connect(noiseGain);
+      noiseGain.connect(compressor);
+      
+      // Pitch/Tone element for the drum meat sound
+      const toneOsc = ctx.createOscillator();
+      const toneGain = ctx.createGain();
+      
+      toneOsc.type = 'triangle';
+      toneOsc.frequency.setValueAtTime(175, ctx.currentTime + time);
+      toneOsc.frequency.exponentialRampToValueAtTime(95, ctx.currentTime + time + 0.09);
+      
+      toneGain.gain.setValueAtTime(0, ctx.currentTime + time);
+      toneGain.gain.linearRampToValueAtTime(0.48, ctx.currentTime + time + 0.005);
+      toneGain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + time + 0.18);
+      
+      toneOsc.connect(toneGain);
+      toneGain.connect(compressor);
+      
+      noiseNode.start(ctx.currentTime + time);
+      noiseNode.stop(ctx.currentTime + time + 0.45);
+      toneOsc.start(ctx.currentTime + time);
+      toneOsc.stop(ctx.currentTime + time + 0.22);
+    };
+    
+    // 3. Hi-Hat Synthesizer (clean crisp clock tick)
+    const triggerHat = (time: number) => {
+      const source = ctx.createBufferSource();
+      source.buffer = noiseBuffer;
+      
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.setValueAtTime(8200, ctx.currentTime + time);
+      
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0, ctx.currentTime + time);
+      gain.gain.linearRampToValueAtTime(0.09, ctx.currentTime + time + 0.004);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + time + 0.045);
+      
+      source.connect(filter);
+      filter.connect(gain);
+      gain.connect(compressor);
+      
+      source.start(ctx.currentTime + time);
+      source.stop(ctx.currentTime + time + 0.08);
     };
 
-    // Play chord with multiple frequencies for rich sound
+    // 4. Premium Polyphonic Supersaw Synth Voice with Resonant Dynamic Filter Sweep
     const playPowerChord = (rootFreq: number, startTime: number, duration: number) => {
-      const isMinor = true; // Classic driving vibe
-      const thirdFactor = isMinor ? 1.2 : 1.25; 
+      const isMinor = true;
+      const thirdFactor = isMinor ? 1.1892 : 1.2599; // Classic rock chord intervals
       
+      // Warm chord voicing: Deep Sub, Core Root, Minor 3rd, Fifth, Double Octave, Higher 10th
       const notes = [
-        rootFreq,          // Bass root
-        rootFreq * 2,      // Mid root
-        rootFreq * 1.5,    // Fifth
-        rootFreq * 2 * thirdFactor, // Third
-        rootFreq * 3,      // Higher Fifth
+        rootFreq * 0.5,
+        rootFreq,
+        rootFreq * thirdFactor,
+        rootFreq * 1.5,
+        rootFreq * 2.0,
+        rootFreq * 2.0 * thirdFactor,
       ];
-
-      notes.forEach((freq, i) => {
-        const detuneFreq = freq * (1 + (i % 2 === 0 ? 0.0035 : -0.0035));
-        playNote(detuneFreq, startTime, duration, 'sawtooth');
-        playNote(freq, startTime, duration, 'triangle'); // Thick sub
+      
+      notes.forEach((freq, index) => {
+        // Multi-voice detuning to create thick acoustic analog chorusing width
+        const voiceCount = 2;
+        for (let v = 0; v < voiceCount; v++) {
+          const osc = ctx.createOscillator();
+          const gainNode = ctx.createGain();
+          const filterNode = ctx.createBiquadFilter();
+          
+          osc.type = index === 0 ? 'sine' : 'sawtooth'; // Deep sub is clean sine; main chord is rich sawtooth
+          
+          // Micro detune coefficients (detuning voices for rich stereo width feeling)
+          const detuneCoeff = 1 + (v === 0 ? 0.0038 : -0.0038) + (index * 0.001);
+          osc.frequency.setValueAtTime(freq * detuneCoeff, ctx.currentTime + startTime);
+          
+          // Organic brief pitch glide up/down on strike
+          osc.frequency.exponentialRampToValueAtTime(freq * detuneCoeff * 1.009, ctx.currentTime + startTime + 0.08);
+          osc.frequency.exponentialRampToValueAtTime(freq * detuneCoeff, ctx.currentTime + startTime + 0.28);
+          
+          // Classic analog resonant LPF envelope sweep
+          filterNode.type = 'lowpass';
+          filterNode.Q.setValueAtTime(4.2, ctx.currentTime + startTime); // beautiful resonance sweep
+          filterNode.frequency.setValueAtTime(260, ctx.currentTime + startTime);
+          filterNode.frequency.exponentialRampToValueAtTime(2400, ctx.currentTime + startTime + 0.09); // filter opens
+          filterNode.frequency.exponentialRampToValueAtTime(750, ctx.currentTime + startTime + duration); // sweeps back down
+          
+          // Gain Amplitude Envelope
+          gainNode.gain.setValueAtTime(0, ctx.currentTime + startTime);
+          gainNode.gain.linearRampToValueAtTime(0.19, ctx.currentTime + startTime + 0.04); // solid attack punch
+          gainNode.gain.linearRampToValueAtTime(0.15, ctx.currentTime + startTime + 0.15); // gentle decay
+          gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startTime + duration); // ringout
+          
+          osc.connect(filterNode);
+          filterNode.connect(gainNode);
+          gainNode.connect(compressor);
+          
+          osc.start(ctx.currentTime + startTime);
+          osc.stop(ctx.currentTime + startTime + duration);
+        }
       });
     };
 
-    // "Eye of the Tiger" styled sequence timeline rhythm
-    const A = 220;
-    const G = 196;
-    const F = 174;
+    // Riff note frequencies (A minor pentatonic driving sequence)
+    const A = 220.00; // Am
+    const G = 196.00; // G
+    const F = 174.61; // F
 
-    // Riff stabs:
-    playPowerChord(A, 0.0, 0.60); // Am (Boom!)
+    // Beat timeline (BPM ~110, step duration is 0.54s)
+    const step = 0.54;
     
-    playPowerChord(A, 1.2, 0.25); // Am (stab)
-    playPowerChord(G, 1.5, 0.25); // G (stab)
-    playPowerChord(A, 1.8, 0.70); // Am (accented long)
+    // Beat loops (Total 14 beats = exactly ~7.56 seconds duration)
+    for (let beat = 0; beat < 14; beat++) {
+      const time = beat * step;
+      
+      // Drum Kick schedule (steady pulse on 1 & 3, with motivational double kick)
+      if (beat % 2 === 0) {
+        triggerKick(time);
+      }
+      if (beat === 1 || beat === 5 || beat === 9 || beat === 13) {
+        triggerKick(time + step * 0.5); // double kick push
+      }
+      
+      // Drum Snare schedule (steady driving snare on 2 & 4, final hit is huge)
+      if (beat % 2 === 1) {
+        triggerSnare(time, beat === 13);
+      }
+      
+      // Running crisp hi-hats
+      triggerHat(time);
+      triggerHat(time + step * 0.5);
+    }
     
-    playPowerChord(A, 2.8, 0.25); // Am (stab)
-    playPowerChord(G, 3.1, 0.25); // G (stab)
-    playPowerChord(F, 3.4, 0.70); // F (accented long)
+    // Choreographed motivational rock riff timeline:
+    // Bar 1
+    playPowerChord(A, 0.0 * step, 0.95 * step); // Heavy intro hit
     
-    playPowerChord(F, 4.4, 0.25); // F (stab)
-    playPowerChord(G, 4.7, 1.10); // G (driving dynamic resolution)
+    // Bar 2
+    playPowerChord(A, 2.0 * step, 0.45 * step);
+    playPowerChord(G, 2.5 * step, 0.45 * step);
+    playPowerChord(A, 3.0 * step, 1.35 * step);
     
+    // Bar 3
+    playPowerChord(A, 5.0 * step, 0.45 * step);
+    playPowerChord(G, 5.5 * step, 0.45 * step);
+    playPowerChord(F, 6.0 * step, 1.35 * step);
+    
+    // Bar 4 (Build-up)
+    playPowerChord(F, 8.0 * step, 0.45 * step);
+    playPowerChord(G, 8.5 * step, 1.85 * step); // rising tone
+    
+    // Bar 5 (Resolving ultimate peak motivational power chord!)
+    playPowerChord(A, 11.0 * step, 2.75 * step); // Holds strong to the end (~7.5s)
+
   } catch (err) {
     console.warn("Failed to play synth opening anthem:", err);
   }
@@ -3311,6 +3452,8 @@ export default function App() {
                   selectMirror={true}
                   dayMaxEvents={true}
                   navLinks={true}
+                  selectLongPressDelay={0}
+                  longPressDelay={0}
                   datesSet={(arg) => {
                     setCurrentCalendarDate(arg.view.calendar.getDate());
                     setCurrentCalendarView(arg.view.type);
