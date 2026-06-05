@@ -1,0 +1,237 @@
+@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Rubik", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+/* RTL adjustment for body and direction helper */
+body {
+  direction: rtl;
+  background-color: #f4f8f7; /* Cozy therapeutic pastel background */
+}
+
+/* Custom fade-in and zoom effects */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* --- FULLCALENDAR PREMIUM OVERRIDES --- */
+
+/* Reset default ugly blue event borders/backgrounds of FullCalendar */
+.fc-v-event, .fc-h-event, .fc-event {
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 1px 0 !important;
+}
+
+/* Event hover micro-interactions */
+.fc-event:hover {
+  transform: translateY(-0.5px);
+  filter: brightness(1.02);
+  transition: all 0.15s ease-in-out;
+}
+
+/* FullCalendar header toolbar styling */
+.fc-header-toolbar {
+  margin-bottom: 1.5rem !important;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.fc-toolbar-title {
+  font-size: 1.1rem !important;
+  font-weight: 800 !important;
+  color: #1e293b !important; /* slate-800 */
+  letter-spacing: -0.015em;
+}
+
+/* Beautiful clinical styling for buttons with pastel accents */
+.fc-button {
+  background-color: #ffffff !important;
+  border: 1px solid #ccfbf1 !important; /* teal-100 */
+  color: #115e59 !important; /* teal-800 */
+  border-radius: 0.75rem !important; /* Rounded-xl */
+  font-size: 0.75rem !important;
+  font-weight: 700 !important;
+  padding: 0.45rem 1rem !important;
+  text-transform: capitalize !important;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.02) !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+}
+
+.fc-button:hover {
+  background-color: #f0fdf4 !important; /* soft mint */
+  border-color: #99f6e4 !important; /* teal-200 */
+  color: #0f172a !important; /* slate-900 */
+}
+
+.fc-button-active, .fc-button-primary:not(:disabled):active, .fc-button-primary:not(:disabled).fc-button-active {
+  background-color: #ccfbf1 !important; /* teal-100/pastel */
+  border-color: #2dd4bf !important; /* teal-400 */
+  color: #0f766e !important; /* teal-750 */
+  box-shadow: inset 0 2px 4px 0 rgba(0, 0, 0, 0.02) !important;
+}
+
+.fc-button:focus {
+  box-shadow: 0 0 0 2px rgba(45, 212, 191, 0.2) !important;
+}
+
+/* Header Cell Customization (The background behind day numbers, e.g., 31.5) */
+.fc-col-header-cell {
+  background-color: #ccefe7 !important; /* Darker hospital-mint shade */
+  border-bottom: 2px solid #9adecc !important;
+  padding: 0.65rem 0 !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.fc-col-header-cell-cushion {
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  color: #0b5e50 !important; /* Darker high-contrast teal text */
+  text-transform: uppercase !important;
+  letter-spacing: 0.02em !important;
+  text-decoration: none !important;
+}
+
+/* Theme-specific custom column header backgrounds (same tone, but darker) */
+[data-theme='hospital-mint'] .fc-col-header-cell {
+  background-color: #ccefe7 !important; /* Richer, darker mint tone */
+  border-bottom: 2px solid #9adecc !important;
+}
+[data-theme='hospital-mint'] .fc-col-header-cell-cushion {
+  color: #0b5e50 !important;
+}
+
+[data-theme='spicy-peach'] .fc-col-header-cell {
+  background-color: #f7dac4 !important; /* Richer, darker peach/orange tone */
+  border-bottom: 2px solid #eab790 !important;
+}
+[data-theme='spicy-peach'] .fc-col-header-cell-cushion {
+  color: #8f4007 !important;
+}
+
+[data-theme='pink-strawberry'] .fc-col-header-cell {
+  background-color: #fbc6da !important; /* Richer, darker pink strawberry tone */
+  border-bottom: 2px solid #e89eb7 !important;
+}
+[data-theme='pink-strawberry'] .fc-col-header-cell-cushion {
+  color: #93144c !important;
+}
+
+[data-theme='sapphire-sky'] .fc-col-header-cell {
+  background-color: #d2e4fc !important; /* Richer, darker sapphire sky tone */
+  border-bottom: 2px solid #a3c4f7 !important;
+}
+[data-theme='sapphire-sky'] .fc-col-header-cell-cushion {
+  color: #174299 !important;
+}
+
+[data-theme='royal-gold'] .fc-col-header-cell {
+  background-color: #eedca4 !important; /* Richer, darker royal gold tone */
+  border-bottom: 2px solid #dbbf7a !important;
+}
+[data-theme='royal-gold'] .fc-col-header-cell-cushion {
+  color: #7a550c !important;
+}
+
+/* Week/Day View Grid Overrides - Spacious heights for extreme visibility and concurrent events */
+.fc-timegrid-slot {
+  height: 5.8rem !important; 
+}
+
+/* Enforce professional, expanded width for the hour/timeslot axis column */
+.fc .fc-timegrid-axis,
+.fc .fc-timegrid-slot-label {
+  width: 82px !important;
+  min-width: 82px !important;
+  max-width: 82px !important;
+}
+
+.fc-timegrid-slot-label-cushion {
+  font-size: 0.8rem !important;
+  font-weight: 800 !important;
+  color: #0d9488 !important; /* teal-600 */
+  text-transform: uppercase;
+  display: block;
+  text-align: center !important;
+}
+
+/* Today line indicator */
+.fc-timegrid-now-indicator-line {
+  border-color: #f43f5e !important; /* rose-500 line */
+  border-width: 2px !important;
+}
+
+.fc-timegrid-now-indicator-arrow {
+  border-right-color: #f43f5e !important;
+  border-left-color: transparent !important;
+}
+
+/* Day grid selections and event cell containers */
+.fc-theme-standard td, .fc-theme-standard th {
+  border: 1.25px solid rgba(13, 148, 136, 0.28) !important; /* Slightly darker and highly visible grid lines */
+}
+
+/* Faint soft blue-mint overlay for selected grids */
+.fc-highlight {
+  background-color: rgba(20, 184, 166, 0.08) !important;
+}
+
+/* Smooth highlights of weekends or dates */
+.fc-day-today {
+  background-color: rgba(45, 212, 191, 0.05) !important; /* Very faint teal for today */
+}
+
+/* FullCalendar RTL adjustments */
+.fc-rtl .fc-col-header-cell {
+  text-align: right !important;
+}
+
+.fc-direction-rtl .fc-timegrid-slot-label-frame {
+  text-align: center !important;
+  padding: 0 0.25rem !important;
+}
+
+/* Custom scrollbar adjustments for directory list */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #99f6e4; /* Pastel teal thumb */
+  border-radius: 10px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #2dd4bf;
+}
+
+/* RTL layout helpers */
+.direction-ltr {
+  direction: ltr !important;
+}
+
+/* Ensure FullCalendar events can wrap titles and text natively without single-line ellipsis truncation */
+.fc-event-main, 
+.fc-event-main-frame, 
+.fc-timegrid-event-frame, 
+.fc-daygrid-event {
+  white-space: normal !important;
+  word-break: break-word !important;
+  overflow: visible !important;
+}
