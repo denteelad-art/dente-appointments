@@ -40,6 +40,94 @@ import { doc, setDoc, deleteDoc, onSnapshot, collection, getDocFromServer } from
 import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from 'recharts';
 import { motion, AnimatePresence } from 'motion/react';
 
+/**
+ * Custom 80s Rock Anthem Synthesizer in Web Audio API.
+ * Synthesizes the motivational "Eye of the Tiger" styled sequence to excite the clinical team.
+ */
+const playDenteRockAnthem = () => {
+  try {
+    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioContext) return;
+    const ctx = new AudioContext();
+    
+    // Lowpass filter to make it sound warm and powerful, not harsh
+    const filter = ctx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(1000, ctx.currentTime);
+    filter.Q.setValueAtTime(1.2, ctx.currentTime);
+    
+    const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(0.12, ctx.currentTime); // keep volume sweet and pleasant
+    
+    filter.connect(masterGain);
+    masterGain.connect(ctx.destination);
+
+    // Helper to play a synth note
+    const playNote = (freq: number, startTime: number, duration: number, type: 'sawtooth' | 'triangle' = 'sawtooth') => {
+      const osc = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+      
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
+      
+      // Pitch glide accent for extra synth punch
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.015, ctx.currentTime + startTime + 0.05);
+
+      gainNode.gain.setValueAtTime(0, ctx.currentTime + startTime);
+      gainNode.gain.linearRampToValueAtTime(0.8, ctx.currentTime + startTime + 0.03); // punchy attack
+      gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + startTime + duration); // smooth decay
+
+      osc.connect(gainNode);
+      gainNode.connect(filter);
+      
+      osc.start(ctx.currentTime + startTime);
+      osc.stop(ctx.currentTime + startTime + duration);
+    };
+
+    // Play chord with multiple frequencies for rich sound
+    const playPowerChord = (rootFreq: number, startTime: number, duration: number) => {
+      const isMinor = true; // Classic driving vibe
+      const thirdFactor = isMinor ? 1.2 : 1.25; 
+      
+      const notes = [
+        rootFreq,          // Bass root
+        rootFreq * 2,      // Mid root
+        rootFreq * 1.5,    // Fifth
+        rootFreq * 2 * thirdFactor, // Third
+        rootFreq * 3,      // Higher Fifth
+      ];
+
+      notes.forEach((freq, i) => {
+        const detuneFreq = freq * (1 + (i % 2 === 0 ? 0.0035 : -0.0035));
+        playNote(detuneFreq, startTime, duration, 'sawtooth');
+        playNote(freq, startTime, duration, 'triangle'); // Thick sub
+      });
+    };
+
+    // "Eye of the Tiger" styled sequence timeline rhythm
+    const A = 220;
+    const G = 196;
+    const F = 174;
+
+    // Riff stabs:
+    playPowerChord(A, 0.0, 0.60); // Am (Boom!)
+    
+    playPowerChord(A, 1.2, 0.25); // Am (stab)
+    playPowerChord(G, 1.5, 0.25); // G (stab)
+    playPowerChord(A, 1.8, 0.70); // Am (accented long)
+    
+    playPowerChord(A, 2.8, 0.25); // Am (stab)
+    playPowerChord(G, 3.1, 0.25); // G (stab)
+    playPowerChord(F, 3.4, 0.70); // F (accented long)
+    
+    playPowerChord(F, 4.4, 0.25); // F (stab)
+    playPowerChord(G, 4.7, 1.10); // G (driving dynamic resolution)
+    
+  } catch (err) {
+    console.warn("Failed to play synth opening anthem:", err);
+  }
+};
+
 // --- 30 PREMIUM GENDER-TAILORED MOTIVATIONAL SALES QUOTES (FEMALE) ---
 const MOTIVATIONAL_FEMALE_QUOTES = [
   "בוקר מנצח אלופה! האנרגיה והחיוך שלך בטלפון הם המנוע האמיתי של סגירת המכירות היום, קדימה!",
@@ -488,7 +576,7 @@ export default function App() {
   const [isUsersManagementModalOpen, setIsUsersManagementModalOpen] = useState(false);
   const [isBackupRestoreModalOpen, setIsBackupRestoreModalOpen] = useState(false);
 
-  // Protection states for Manager password verification (Code 8833)
+  // Protection states for Manager password verification (Code 2020)
   const [adminPasswordPrompt, setAdminPasswordPrompt] = useState<{
     isOpen: boolean;
     pendingRepId: string | null;
@@ -500,14 +588,14 @@ export default function App() {
   });
   const [adminPasswordInput, setAdminPasswordInput] = useState('');
 
-  // User login status for secure Elad: 8833 access
+  // User login status for secure DENTE: 2020 access
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => localStorage.getItem('dente_logged_in') === 'true');
   const [loginUsername, setLoginUsername] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
 
   // Table vs Calendar view state for responsive customer appointment management
-  const [viewMode, setViewMode] = useState<'table' | 'calendar'>('table');
+  const [viewMode, setViewMode] = useState<'table' | 'calendar'>('calendar');
   const [tableSearch, setTableSearch] = useState('');
   const [tableStatusFilter, setTableStatusFilter] = useState<'all' | 'confirmed' | 'unconfirmed' | 'dealClosed' | 'reminded' | 'finalConfirmed'>('all');
   const [tableRepFilter, setTableRepFilter] = useState<string>('all');
@@ -611,7 +699,7 @@ export default function App() {
           // There is a higher version on the remote cloud server (AI Studio) than what is running locally on their disk
           showConfirm(
             `🔄 עדכון גרסה חדש זמין בשרת! (${serverVersion})`,
-            `קיימת גרסה מעודכנת יותר בשרת DENTE הראשי של AI Studio (גרסה בשרת: ${serverVersion}, מופעלת אצלך: ${CURRENT_CODE_VERSION}).\n\nכדי להחיל את השדרוג בקלות:\n1. היכנס לחלון ה-AI Studio שלך בדפדפן.\n2. לחץ על כפתור ה-Export למעלה (ליד כפתור ה-Share) כדי להוריד את קובץ ה-ZIP העדכני ביותר.\n3. חלץ את ה-ZIP החדש לתוך אותה תיקיית תוכנה במחשבך (ובחר "החלף קבצים ביעד").\n4. הפעל מחדש את DENTE-Launcher.bat והשינויים כגון המילים שהוחלפו והשיפורים יופיעו מיד!\n\nהאם ברצונך לבצע ניקוי מטמון ורענון מקומי כעת?`,
+            `קיימת גרסה מעודכנת יותר בשרת DENTE הראשי של AI Studio (גרסה בשרת: ${serverVersion}, מופעלת אצלך: ${CURRENT_CODE_VERSION}).\n\nכדי להחיל את השדרוג בקלות:\n1. היכנס לחלון ה-AI Studio שלך בדפדפן.\n2. לחץ על כפתור ה-Export למעלה (ליד כפתור ה-Share) כדי להוריד את קובץ ה-ZIP העדכני ביותר.\n3. חלץ את ה-ZIP החדש לתוך אותה תיקיית תוכנה במחשבך (ובחר "החלף קבצים ביעד").\n4. הפעל מחדש את dente-launcher.bat והשינויים כגון המילים שהוחלפו והשיפורים יופיעו מיד!\n\nהאם ברצונך לבצע ניקוי מטמון ורענון מקומי כעת?`,
             async () => {
               // Clear cache and hard reload so they start clean
               if ('serviceWorker' in navigator) {
@@ -2200,75 +2288,77 @@ export default function App() {
   if (!isLoggedIn) {
     const handleLoginSubmit = (e: React.FormEvent) => {
       e.preventDefault();
-      if (loginUsername.trim().toLowerCase() === 'elad' && loginPassword === '8833') {
+      if (loginUsername.trim().toLowerCase() === 'dente' && loginPassword === '2020') {
         setIsLoggedIn(true);
         localStorage.setItem('dente_logged_in', 'true');
-        showToast("חיבור מאובטח אושר", "ברוכים הבאים למערכת DENTE, אלעד!", "success");
+        showToast("חיבור מאובטח אושר", "ברוכים הבאים למערכת DENTE!", "success");
         setLoginError('');
+        playDenteRockAnthem(); // Play the custom motivating sound!
       } else {
         setLoginError("שם משתמש או סיסמה שגויים. נסו שוב.");
       }
     };
 
     return (
-      <div className="min-h-screen bg-slate-900 flex items-center justify-center p-4 relative overflow-hidden" dir="rtl" style={{ fontFamily: 'Inter, sans-serif' }}>
-        {/* Soft aesthetic background glows */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" />
+      <div className="min-h-screen bg-[#f0f9f6] flex items-center justify-center p-4 relative overflow-hidden" dir="rtl" style={{ fontFamily: 'Inter, sans-serif' }}>
+        {/* Soft aesthetic background glows with elegant pastel colors */}
+        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-teal-100/40 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-amber-100/30 rounded-full blur-3xl" />
+        <div className="absolute -top-12 -right-12 w-64 h-64 bg-emerald-500/5 rounded-full blur-2xl" />
 
-        <div className="bg-slate-800 border border-slate-700/60 max-w-sm w-full rounded-2xl shadow-2xl p-6 text-right space-y-5 relative z-10 animate-in fade-in zoom-in-95 duration-200">
+        <div className="bg-white/95 backdrop-blur-md border border-teal-100/80 max-w-sm w-full rounded-2xl shadow-xl shadow-teal-950/5 p-8 text-right space-y-6 relative z-10 animate-in fade-in zoom-in-95 duration-300">
           <div className="text-center space-y-3">
-            <div className="inline-flex items-center justify-center p-4 bg-slate-700/40 rounded-2xl border border-slate-600/50 shadow-inner">
-              <span className="text-3xl">🔐</span>
+            <div className="inline-flex items-center justify-center p-4 bg-[#f0f9f6] rounded-2xl border border-teal-100/65 shadow-inner">
+              <span className="text-3xl text-teal-600 animate-bounce">🔐</span>
             </div>
             <div className="space-y-1">
-              <h2 className="text-lg font-black text-white tracking-tight">כניסת מנהל מאובטחת - DENTE</h2>
-              <p className="text-[10px] text-slate-400 font-bold">אנא הזן את פרטי הגישה האישיים שלך עבור DENTE</p>
+              <h2 className="text-lg font-black text-slate-800 tracking-tight">כניסה מאובטחת - DENTE</h2>
+              <p className="text-[10px] text-slate-500 font-bold">אנא הזן את פרטי הגישה האישיים שלך עבור DENTE</p>
             </div>
           </div>
 
-          <form onSubmit={handleLoginSubmit} className="space-y-3.5 pt-1">
+          <form onSubmit={handleLoginSubmit} className="space-y-4 pt-1">
             <div className="space-y-1.5">
-              <label className="block text-[11px] font-black text-slate-300">שם משתמש:</label>
+              <label className="block text-[11px] font-black text-slate-600">שם משתמש:</label>
               <input
                 type="text"
                 required
-                placeholder="שם המשתמש (Elad)"
+                placeholder="הזן שם משתמש"
                 value={loginUsername}
                 onChange={(e) => setLoginUsername(e.target.value)}
-                className="w-full font-sans text-xs py-2.5 px-4 bg-slate-900/60 border border-slate-700 text-white placeholder-slate-500 outline-none rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-right"
+                className="w-full font-sans text-xs py-2.5 px-4 bg-slate-50/65 border border-slate-250 text-slate-800 placeholder-slate-400 outline-none rounded-xl focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all text-right"
               />
             </div>
 
             <div className="space-y-1.5">
-              <label className="block text-[11px] font-black text-slate-300">סיסמה סודית:</label>
+              <label className="block text-[11px] font-black text-slate-600">סיסמה סודית:</label>
               <input
                 type="password"
                 required
-                placeholder="סיסמת גישה (8833)"
+                placeholder="הזן סיסמה סודית"
                 value={loginPassword}
                 onChange={(e) => setLoginPassword(e.target.value)}
-                className="w-full font-mono text-xs tracking-widest py-2.5 px-4 bg-slate-900/60 border border-slate-700 text-white placeholder-slate-500 outline-none rounded-xl focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 transition-all text-center"
+                className="w-full font-mono text-xs tracking-widest py-2.5 px-4 bg-slate-50/65 border border-slate-250 text-slate-800 placeholder-slate-400 outline-none rounded-xl focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 transition-all text-center"
               />
             </div>
 
             {loginError && (
-              <div className="p-2.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-[10px] text-rose-450 font-bold leading-relaxed text-right animate-pulse">
+              <div className="p-2.5 bg-rose-500/10 border border-rose-500/20 rounded-xl text-[10px] text-rose-500 font-bold leading-relaxed text-right animate-pulse">
                 ⚠️ {loginError}
               </div>
             )}
 
             <button
               type="submit"
-              className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-xl transition-all cursor-pointer shadow-md flex items-center justify-center gap-1.5 border-none mt-2 active:scale-[0.98]"
+              className="w-full py-3 bg-[#0d9488] hover:bg-[#0f766e] text-white font-black text-xs rounded-xl transition-all cursor-pointer shadow-md flex items-center justify-center gap-1.5 border-none mt-2 active:scale-[0.98]"
             >
               <LogIn className="w-3.5 h-3.5 ml-1" />
               <span>התחבר למערכת</span>
             </button>
           </form>
 
-          <div className="border-t border-slate-700/50 pt-3 text-center">
-            <p className="text-[9px] text-slate-500 font-extrabold tracking-wide uppercase">
+          <div className="border-t border-slate-100 pt-3 text-center">
+            <p className="text-[9px] text-slate-400 font-extrabold tracking-wide uppercase">
               DENTE SPECIALISTS © 2026 - כניסה מורשית בלבד
             </p>
           </div>
@@ -2485,7 +2575,7 @@ export default function App() {
           </div>
           <div className="text-right">
             <h1 className="text-base font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
-              DENETE מרפאת מומחים פה ולסת
+              DENTE מרפאת מומחים פה ולסת
             </h1>
             <p className="text-[11px] text-slate-500 font-bold flex flex-wrap items-center gap-1.5 mt-0.5">
               <span className={themeConfig.accentText}>רוזנסקי 4, ראשון לציון (קומה 3)</span>
@@ -2534,6 +2624,17 @@ export default function App() {
               <span className="text-xs font-extrabold font-mono text-indigo-700 mt-0.5">{appointments.length}</span>
             </div>
           </div>
+
+          {/* 🎵 Motivational Anthem Button */}
+          <button
+            type="button"
+            onClick={playDenteRockAnthem}
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-black text-teal-700 bg-teal-50 hover:bg-teal-100/80 rounded-xl transition-all border border-teal-200/50 cursor-pointer shadow-3xs active:scale-[0.97]"
+            title="הפעל מנגינת מוטיבציה מלהיבה (DENTE Rock Anthem) 🎵"
+          >
+            <span className="text-sm select-none">🎵</span>
+            <span>קצב מוטיבציה!</span>
+          </button>
 
           {/* Secure Logout Action Button */}
           <button
@@ -2656,33 +2757,6 @@ export default function App() {
                 </div>
                 <div className="flex items-center gap-1.5 pl-1">
                   <span className="text-xs text-slate-400 group-hover:-translate-x-1 transition-transform">◀</span>
-                </div>
-              </button>
-            </div>
-
-            {/* 1.1 Software Update Button (עדכון תוכנה) */}
-            <div className={`bg-gradient-to-l from-teal-50/50 to-emerald-50/40 rounded-2xl border-2 border-teal-200/60 shadow-2xs hover:shadow-xs hover:border-teal-300 transition-all overflow-hidden text-right`}>
-              <button
-                type="button"
-                onClick={forceUpdateAppCode}
-                className="w-full flex items-center justify-between p-4 hover:bg-teal-500/5 text-right transition-all duration-155 group cursor-pointer border-none"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 bg-teal-500 text-white rounded-xl group-hover:scale-105 group-hover:rotate-180 transition-all duration-500 flex items-center justify-center">
-                    <RefreshCw className="w-4 h-4" />
-                  </div>
-                  <div className="text-right">
-                    <h3 className="text-xs font-black text-teal-950 leading-tight flex items-center gap-1.5">
-                      עדכון תוכנה
-                    </h3>
-                    <p className="text-[10px] text-teal-800/80 font-bold mt-0.5 flex items-center gap-2">
-                      <span>רענון גרסה מלא</span>
-                      <span className="text-[8.5px] bg-[#0d9488]/10 text-[#0d9488] px-1 py-0.2 rounded font-sans font-black select-none">{appVersion}</span>
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1.5 pl-1">
-                  <span className="text-xs text-teal-500 group-hover:-translate-x-1 transition-transform">◀</span>
                 </div>
               </button>
             </div>
@@ -3029,8 +3103,21 @@ export default function App() {
                                 )}
 
                                 {appt.dealClosed && (
-                                  <span className="bg-amber-100 text-amber-900 border border-amber-300 px-1.5 py-0.5 rounded-md flex items-center gap-0.5" title="סגר עסקה">
-                                    👑 עסקה
+                                  <span className="bg-amber-100 text-amber-900 border border-amber-300 px-1.5 py-0.5 rounded-md flex items-center gap-1 font-bold" title="סגר עסקה">
+                                    <span>👑 עסקה</span>
+                                    {appt.dealAmount && <span className="font-sans font-black bg-white/70 px-1 py-0.2 rounded text-amber-950">₪{Number(appt.dealAmount).toLocaleString()}</span>}
+                                  </span>
+                                )}
+
+                                {appt.dealClosed && appt.jawPromotion === 'one' && (
+                                  <span className="bg-teal-50 text-teal-900 border border-teal-200 px-1.5 py-0.5 rounded-md text-[8.5px] font-black" title="מבצע לסת אחת">
+                                    🦷 לסת אחת (שתלים + בר)
+                                  </span>
+                                )}
+
+                                {appt.dealClosed && appt.jawPromotion === 'two' && (
+                                  <span className="bg-indigo-50 text-indigo-900 border border-indigo-200 px-1.5 py-0.5 rounded-md text-[8.5px] font-black" title="מבצע שתי לסתות">
+                                    🦷🦷 שתי לסתות (שתלים + בר)
                                   </span>
                                 )}
 
@@ -3681,7 +3768,7 @@ export default function App() {
         
         const handleVerifyCode = (e: React.FormEvent) => {
           e.preventDefault();
-          if (adminPasswordInput === '8833') {
+          if (adminPasswordInput === '2020') {
             if (adminPasswordPrompt.pendingRepId) {
               setActiveRepresentativeId(adminPasswordPrompt.pendingRepId);
             }
@@ -4602,6 +4689,33 @@ export default function App() {
                   <span className="select-none shrink-0" aria-hidden="true">📝</span>
                   <span className="select-all">{hoveredEventData.appointment.notes}</span>
                 </p>
+              </div>
+            )}
+
+            {hoveredEventData.appointment.dealClosed && (
+              <div className="border-t border-slate-100 pt-2 bg-amber-50/50 p-2 rounded-lg border border-amber-250/50 mt-1">
+                <p className="text-[9px] font-extrabold text-amber-900 flex items-center gap-1">
+                  <span className="select-none text-[11px]">👑</span>
+                  <span>פרטי עסקת המרפאה:</span>
+                </p>
+                <div className="grid grid-cols-2 gap-2 mt-1.5">
+                  <div>
+                    <p className="text-[8.5px] font-extrabold text-slate-400">סכום שנסגר</p>
+                    <p className="text-[11.5px] font-black text-amber-950 font-sans">
+                      {hoveredEventData.appointment.dealAmount 
+                        ? `₪${Number(hoveredEventData.appointment.dealAmount).toLocaleString()}` 
+                        : 'לא הוזן סכום'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[8.5px] font-extrabold text-slate-400">מבצע שמומש</p>
+                    <p className="text-[10px] font-black text-slate-700 leading-tight">
+                      {hoveredEventData.appointment.jawPromotion === 'one' && '🦷 לסת אחת (שתלים + בר)'}
+                      {hoveredEventData.appointment.jawPromotion === 'two' && '🦷🦷 שתי לסתות'}
+                      {(!hoveredEventData.appointment.jawPromotion || hoveredEventData.appointment.jawPromotion === 'none') && 'כללי / ללא מבצע'}
+                    </p>
+                  </div>
+                </div>
               </div>
             )}
           </div>

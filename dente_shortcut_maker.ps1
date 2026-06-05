@@ -7,7 +7,7 @@ if (-not $scriptDir) { $scriptDir = $PSScriptRoot }
 if (-not $scriptDir) { $scriptDir = Convert-Path . }
 
 $desktop = [System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::Desktop)
-$batPath = Join-Path $scriptDir "DENTE-Launcher.bat"
+$batPath = Join-Path $scriptDir "dente-launcher.bat"
 $localIco = Join-Path $scriptDir "dentist.ico"
 $shortcutPath = Join-Path $desktop "DENTE Clinic Manager.lnk"
 $iconDest = "C:\Users\Public\dentist.ico"

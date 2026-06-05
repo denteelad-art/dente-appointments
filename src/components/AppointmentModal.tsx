@@ -41,6 +41,8 @@ export default function AppointmentModal({
   const [color, setColor] = useState<'mint' | 'orange' | 'pink'>('mint');
   const [arrivalConfirmed, setArrivalConfirmed] = useState(false);
   const [dealClosed, setDealClosed] = useState(false);
+  const [dealAmount, setDealAmount] = useState<string>(''); // NEW: closed deal sum
+  const [jawPromotion, setJawPromotion] = useState<'none' | 'one' | 'two'>('none'); // NEW: campaign jaw promo
   const [noShow, setNoShow] = useState(false);
   const [bookedBy, setBookedBy] = useState('');
   const [smsStatus, setSmsStatus] = useState<'idle' | 'pending' | 'sent' | 'failed'>('idle');
@@ -83,6 +85,8 @@ export default function AppointmentModal({
         setColor(appointment.color || 'mint');
         setArrivalConfirmed(appointment.arrivalConfirmed || false);
         setDealClosed(appointment.dealClosed || false);
+        setDealAmount(appointment.dealAmount !== undefined ? String(appointment.dealAmount) : '');
+        setJawPromotion(appointment.jawPromotion || 'none');
         setNoShow(appointment.noShow || false);
         setBookedBy(appointment.bookedBy || '');
         setSmsStatus(appointment.smsStatus || 'idle');
@@ -100,6 +104,8 @@ export default function AppointmentModal({
         setColor('mint');
         setArrivalConfirmed(false);
         setDealClosed(false);
+        setDealAmount('');
+        setJawPromotion('none');
         setNoShow(false);
         setBookedBy(defaultRepresentativeName);
         setSmsStatus('idle');
@@ -281,6 +287,8 @@ export default function AppointmentModal({
         color,
         arrivalConfirmed,
         dealClosed,
+        dealAmount: dealClosed && dealAmount.trim() ? Number(dealAmount) : undefined,
+        jawPromotion: dealClosed ? jawPromotion : 'none',
         noShow,
         bookedBy: bookedBy.trim(),
         smsStatus,
@@ -316,6 +324,8 @@ export default function AppointmentModal({
             color,
             arrivalConfirmed,
             dealClosed,
+            dealAmount: dealClosed && dealAmount.trim() ? Number(dealAmount) : undefined,
+            jawPromotion: dealClosed ? jawPromotion : 'none',
             noShow,
             bookedBy: bookedBy.trim(),
             smsStatus,
@@ -701,7 +711,7 @@ export default function AppointmentModal({
                         className="mt-0.7 w-4.5 h-4.5 rounded-md border-amber-300 text-amber-500 checked:bg-amber-500 checked:border-amber-600 focus:ring-amber-500/20 cursor-pointer transition-all"
                       />
                       <div>
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="text-xs font-extrabold text-slate-800">לקוח משלם - סגר עסקה ושילם במרפאה 👑</span>
                           <span className="inline-flex items-center justify-center px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-850 border border-amber-200 text-[9px] font-black">
                             👑 כתר זהב מלכותי
@@ -710,6 +720,96 @@ export default function AppointmentModal({
                         <p className="text-[10px] text-slate-500 mt-0.5 font-medium leading-relaxed">
                           מדגיש את התור ביומן עם כתר זהב יוקרתי ומסמן את המטופל כלקוח שסגר עסקה מוצלחת ושילם בקליניקה!
                         </p>
+
+                        {/* Interactive promotion sum and jaws details */}
+                        {dealClosed && (
+                          <div className="mt-3 p-3 bg-amber-50/60 border border-amber-200/50 rounded-xl space-y-3.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                            {/* Deal sum */}
+                            <div>
+                              <label className="block text-[11.5px] font-black text-amber-950 mb-1">
+                                סכום העסקה במלואו (בש"ח ₪):
+                              </label>
+                              <div className="relative">
+                                <input
+                                  type="number"
+                                  placeholder="לדוגמה: 25200"
+                                  value={dealAmount}
+                                  onChange={(e) => setDealAmount(e.target.value)}
+                                  className="w-full text-xs font-sans py-2 pl-8 pr-3 bg-white border border-amber-200 rounded-lg outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/10 transition-all font-bold text-slate-800 text-left"
+                                />
+                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-amber-600 font-extrabold text-xs select-none">
+                                  ₪
+                                </span>
+                              </div>
+                              <div className="flex flex-wrap gap-1.5 mt-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => setDealAmount('25200')}
+                                  className="text-[9.5px] font-black px-2 py-0.5 bg-amber-100 hover:bg-amber-200 text-amber-850 border border-amber-200 rounded-md transition-all cursor-pointer"
+                                >
+                                  מבצע לסת אחת: 25,200 ₪
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => setDealAmount('50400')}
+                                  className="text-[9.5px] font-black px-2 py-0.5 bg-amber-100 hover:bg-amber-200 text-amber-850 border border-amber-200 rounded-md transition-all cursor-pointer"
+                                >
+                                  מבצע שתי לסתות: 50,400 ₪
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* Jaw campaign selector */}
+                            <div>
+                              <label className="block text-[11.5px] font-black text-amber-950 mb-1">
+                                פרטי המבצע שמימש הלקוח:
+                              </label>
+                              <div className="grid grid-cols-1 gap-1.5">
+                                <label className="flex items-center gap-2 p-1.5 bg-white/80 rounded-lg border border-amber-100 cursor-pointer hover:bg-white select-none transition-all">
+                                  <input
+                                    type="radio"
+                                    name="jawPromotion"
+                                    checked={jawPromotion === 'none'}
+                                    onChange={() => setJawPromotion('none')}
+                                    className="w-3.5 h-3.5 text-amber-500 border-amber-300 focus:ring-amber-500/10 cursor-pointer"
+                                  />
+                                  <span className="text-[10px] font-bold text-slate-700">לא מימש מבצע לסתות מוזל</span>
+                                </label>
+
+                                <label className="flex items-center gap-2 p-1.5 bg-white/80 rounded-lg border border-amber-100 cursor-pointer hover:bg-white select-none transition-all">
+                                  <input
+                                    type="radio"
+                                    name="jawPromotion"
+                                    checked={jawPromotion === 'one'}
+                                    onChange={() => {
+                                      setJawPromotion('one');
+                                      if (!dealAmount) setDealAmount('25200');
+                                    }}
+                                    className="w-3.5 h-3.5 text-amber-500 border-amber-300 focus:ring-amber-500/10 cursor-pointer"
+                                  />
+                                  <span className="text-[10px] font-black text-teal-850">הלקוח מימש מבצע ללסת אחת 🦷 (₪25,200)</span>
+                                </label>
+
+                                <label className="flex items-center gap-2 p-1.5 bg-white/80 rounded-lg border border-amber-100 cursor-pointer hover:bg-white select-none transition-all">
+                                  <input
+                                    type="radio"
+                                    name="jawPromotion"
+                                    checked={jawPromotion === 'two'}
+                                    onChange={() => {
+                                      setJawPromotion('two');
+                                      if (!dealAmount || dealAmount === '25200') setDealAmount('50400');
+                                    }}
+                                    className="w-3.5 h-3.5 text-amber-500 border-amber-300 focus:ring-amber-500/10 cursor-pointer"
+                                  />
+                                  <span className="text-[10px] font-black text-indigo-800 font-sans">הלקוח מימש מבצע לשתי לסתות 🦷🦷 (₪50,400)</span>
+                                </label>
+                              </div>
+                              <p className="text-[8.5px] text-amber-800 mt-1 font-bold leading-tight">
+                                * קמפיין מיוחד: 14 שיניים על שתלים ובר טיטניום ברמת גימור הגבוהה ביותר.
+                              </p>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </label>
                   </div>

@@ -21,6 +21,8 @@ export interface Appointment {
   color?: 'mint' | 'orange' | 'pink'; // Custom pastel colors requested by user
   arrivalConfirmed?: boolean; // Highlighted icon to indicate patient confirmed attendance (✓✓ Double V)
   dealClosed?: boolean;       // Patient closed a deal and paid (👑 Crown)
+  dealAmount?: number;        // NEW: Sum of the closed deal
+  jawPromotion?: 'none' | 'one' | 'two'; // NEW: Campaign jaw selection
   bookedBy?: string;          // Name of the clinic representative who booked the appointment
   smsStatus?: 'idle' | 'pending' | 'sent' | 'failed';
   smsTextSent?: string;
