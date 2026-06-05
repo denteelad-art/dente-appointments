@@ -1,0 +1,90 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Catch-all safety net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Primitive Global Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Patient Validation
+    function isValidPatient(data) {
+      return data.id is string && data.id.size() <= 128
+        && data.nationalId is string && data.nationalId.size() <= 20
+        && data.firstName is string && data.firstName.size() <= 50
+        && data.familyName is string && data.familyName.size() <= 50
+        && data.city is string && data.city.size() <= 100
+        && data.phoneNumber is string && data.phoneNumber.size() <= 20
+        && data.createdAt is string && data.createdAt.size() <= 100;
+    }
+
+    // Appointment Validation
+    function isValidAppointment(data) {
+      return data.id is string && data.id.size() <= 128
+        && data.patientId is string && data.patientId.size() <= 128
+        && data.title is string && data.title.size() <= 200
+        && data.start is string && data.start.size() <= 100
+        && data.end is string && data.end.size() <= 100
+        && data.firstReminder is bool
+        && data.finalConfirmation is bool
+        && (!('notes' in data) || (data.notes is string && data.notes.size() <= 5000))
+        && (!('color' in data) || (data.color in ['mint', 'orange', 'pink']))
+        && (!('arrivalConfirmed' in data) || (data.arrivalConfirmed is bool))
+        && (!('dealClosed' in data) || (data.dealClosed is bool))
+        && (!('bookedBy' in data) || (data.bookedBy is string && data.bookedBy.size() <= 100))
+        && (!('smsStatus' in data) || (data.smsStatus in ['idle', 'pending', 'sent', 'failed']))
+        && (!('smsTextSent' in data) || (data.smsTextSent is string && data.smsTextSent.size() <= 2000));
+    }
+
+    // Settings Validation
+    function isValidSettings(data) {
+      return data.id is string && data.id.size() <= 128
+        && data.smsApiKey is string && data.smsApiKey.size() <= 100
+        && data.smsSenderId is string && data.smsSenderId.size() <= 20
+        && data.smsTemplate is string && data.smsTemplate.size() <= 1000
+        && data.smsCredit is int
+        && data.smsProvider in ['sms193', 'twilio', 'inforu', 'leadic']
+        && data.systemTheme in ['hospital-mint', 'spicy-peach', 'pink-strawberry', 'sapphire-sky', 'royal-gold'];
+    }
+
+    // Collection Rules
+    match /patients/{patientId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(patientId) && isValidPatient(incoming());
+      allow update: if isSignedIn() && isValidId(patientId) && isValidPatient(incoming());
+      allow delete: if isSignedIn() && isValidId(patientId);
+    }
+
+    match /appointments/{appointmentId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && isValidId(appointmentId) && isValidAppointment(incoming())
+                     && exists(/databases/$(database)/documents/patients/$(incoming().patientId));
+      allow update: if isSignedIn() && isValidId(appointmentId) && isValidAppointment(incoming())
+                     && incoming().patientId == existing().patientId
+                     && incoming().id == existing().id;
+      allow delete: if isSignedIn() && isValidId(appointmentId);
+    }
+
+    match /settings/{settingsId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn() && isValidId(settingsId) && isValidSettings(incoming());
+    }
+  }
+}

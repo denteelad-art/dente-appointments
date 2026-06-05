@@ -1,0 +1,103 @@
+{
+  "entities": {
+    "Patient": {
+      "title": "Patient",
+      "description": "Represents a clinic patient and their contact details.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier of the patient" },
+        "nationalId": { "type": "string", "description": "National ID card number of the patient" },
+        "firstName": { "type": "string", "description": "Patient's first name" },
+        "familyName": { "type": "string", "description": "Patient's family name" },
+        "city": { "type": "string", "description": "City of residence" },
+        "phoneNumber": { "type": "string", "description": "Contact phone number" },
+        "createdAt": { "type": "string", "format": "date-time", "description": "Timestamp when patient was added" }
+      },
+      "required": ["id", "firstName", "phoneNumber", "createdAt"]
+    },
+    "Appointment": {
+      "title": "Appointment",
+      "description": "Represents an appointment slot for a patient in the calendar.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier of the appointment" },
+        "patientId": { "type": "string", "description": "Linked Patient reference ID" },
+        "title": { "type": "string", "description": "Appointment title / treatment plan description" },
+        "start": { "type": "string", "format": "date-time", "description": "ISO start datetime string" },
+        "end": { "type": "string", "format": "date-time", "description": "ISO end datetime string" },
+        "firstReminder": { "type": "boolean", "description": "Flag for first reminder sent/confirmed" },
+        "finalConfirmation": { "type": "boolean", "description": "Flag for final checkup/follow-up phone call confirmed" },
+        "notes": { "type": "string", "description": "Additional treatment notes" },
+        "color": { "type": "string", "enum": ["mint", "orange", "pink"], "description": "Visual theme color tag for calendar" },
+        "arrivalConfirmed": { "type": "boolean", "description": "True if patient confirmed they are coming" },
+        "dealClosed": { "type": "boolean", "description": "True if booking fee or treatment fee is settled" },
+        "bookedBy": { "type": "string", "description": "Name of representative who created this booking" },
+        "smsStatus": { "type": "string", "enum": ["idle", "pending", "sent", "failed"], "description": "SMS log delivery status" },
+        "smsTextSent": { "type": "string", "description": "Stored text of the sent reminder message" },
+        "noShow": { "type": "boolean", "description": "True if patient did not show up (no-show/missed)" }
+      },
+      "required": ["id", "patientId", "title", "start", "end", "firstReminder", "finalConfirmation"]
+    },
+    "Representative": {
+      "title": "Representative",
+      "description": "Represents a clinic staff member / user / station operator.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Staff member reference ID" },
+        "name": { "type": "string", "description": "Readable name of the staff member" },
+        "gender": { "type": "string", "enum": ["male", "female"], "description": "Biological/grammatical gender for custom messages" },
+        "role": { "type": "string", "enum": ["admin", "representative"], "description": "System access level" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["id", "name", "gender", "role", "createdAt"]
+    },
+    "Settings": {
+      "title": "Settings",
+      "description": "Global settings for the clinic application including SMS gateway configuration.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "smsApiKey": { "type": "string" },
+        "smsSenderId": { "type": "string" },
+        "smsTemplate": { "type": "string" },
+        "smsCredit": { "type": "number" },
+        "smsProvider": { "type": "string", "enum": ["sms193", "twilio", "inforu", "leadic"] },
+        "systemTheme": { "type": "string", "enum": ["hospital-mint", "spicy-peach", "pink-strawberry", "sapphire-sky", "royal-gold"] }
+      },
+      "required": ["id", "smsApiKey", "smsSenderId", "smsTemplate", "smsCredit", "smsProvider", "systemTheme"]
+    },
+    "SystemInfo": {
+      "title": "SystemInfo",
+      "description": "Information about the systems current release status and versioning.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier of the system info doc" },
+        "latest_version": { "type": "string", "description": "Latest code release sequence pointer" },
+        "updatedAt": { "type": "string", "description": "Timestamp when this version was published" }
+      },
+      "required": ["id", "latest_version", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "patients/{patientId}": {
+      "schema": "Patient",
+      "description": "Collection of dental clinic patients."
+    },
+    "appointments/{appointmentId}": {
+      "schema": "Appointment",
+      "description": "Collection of scheduled treatments and appointments."
+    },
+    "settings/{settingsId}": {
+      "schema": "Settings",
+      "description": "Global configurations and SMS gateway variables."
+    },
+    "representatives/{repId}": {
+      "schema": "Representative",
+      "description": "Registered clinic representatives and agents authorized on various stations."
+    },
+    "system_info/{infoId}": {
+      "schema": "SystemInfo",
+      "description": "Collection tracking the current target build versions for launcher integration."
+    }
+  }
+}

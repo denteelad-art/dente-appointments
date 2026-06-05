@@ -1,0 +1,6 @@
+{
+  "name": "DENTE מומחים פה ולסת",
+  "description": "Professional dental care & oral surgery calendar system for DENTE Specialists - Oral and Maxillofacial Clinic at Rishon LeZion.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
