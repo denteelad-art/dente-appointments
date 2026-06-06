@@ -299,9 +299,25 @@ export default function AppointmentModal({
     }
   };
 
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      if (mode === 'create') {
+        const hasInlineData = isNewPatientInline && newPatientFirstName.trim() && newPatientPhoneNumber.trim();
+        const hasSelectedPatient = !isNewPatientInline && patientId;
+        if (hasInlineData || hasSelectedPatient) {
+          handleSubmit(e);
+        } else {
+          onClose();
+        }
+      } else {
+        handleSubmit(e);
+      }
+    }
+  };
+
   return (
     <div 
-      onClick={onClose}
+      onClick={handleBackdropClick}
       className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 z-50 animate-fade-in cursor-pointer" 
       id="appointment-modal-overlay" 
       dir="rtl"

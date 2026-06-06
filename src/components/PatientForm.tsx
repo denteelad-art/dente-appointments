@@ -11,6 +11,8 @@ interface PatientFormProps {
   appointments?: Appointment[];
   onUpdatePatient?: (patient: Patient) => void;
   representatives?: Representative[];
+  borderClass?: string;
+  accentTextClass?: string;
 }
 
 export default function PatientForm({ 
@@ -19,7 +21,9 @@ export default function PatientForm({
   onDeletePatient,
   appointments = [],
   onUpdatePatient,
-  representatives = []
+  representatives = [],
+  borderClass,
+  accentTextClass
 }: PatientFormProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [isMainDirectoryOpen, setIsMainDirectoryOpen] = useState(false);
@@ -42,23 +46,27 @@ export default function PatientForm({
   return (
     <div className="text-right font-sans" id="patient-management-container" dir="rtl">
       {/* Sleek Patient Directory Action Button */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden" id="patient-directory-shortcut-panel">
+      <div className={`bg-white rounded-2xl border ${borderClass || 'border-slate-150'} shadow-2xs hover:shadow-xs transition-all overflow-hidden text-right`} id="patient-directory-shortcut-panel">
         <button
           type="button"
           onClick={() => setIsMainDirectoryOpen(true)}
-          className="w-full flex items-center justify-between p-4 bg-gradient-to-l from-teal-500/5 to-emerald-500/5 hover:from-teal-500/10 hover:to-emerald-500/10 text-right transition-all duration-200 group border-none cursor-pointer"
+          className="w-full flex items-center justify-between p-4 hover:bg-slate-50 text-right transition-all duration-155 group border-none cursor-pointer"
+          title="לחצו לפתיחת מאגר המטופלים המלא: חיפוש, יצירת כרטיסי לקוח חדשים, סינון תורים, מחיקה וניהול קליני"
         >
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-teal-50 text-teal-600 rounded-xl group-hover:scale-105 transition-all">
+            <div className="p-2.5 bg-teal-50 text-teal-600 rounded-xl group-hover:scale-105 transition-all flex items-center justify-center">
               <User className="w-5 h-5 text-teal-600" />
             </div>
             <div>
-              <h3 className="text-xs font-black text-slate-800">מאגר המטופלים</h3>
-              <p className="text-[10px] text-slate-500 font-bold">חיפוש, סיווג וניהול</p>
+              <h3 className="text-xs font-black text-slate-800 leading-tight">מאגר המטופלים</h3>
+              <p className="text-[10px] text-slate-500 font-bold mt-0.5">חיפוש, סיווג וניהול</p>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 bg-teal-50/80 border border-teal-150 text-teal-700 text-[11px] font-black font-mono px-2.5 py-1 rounded-full">
-            <span>{patients.length} רשומים</span>
+          <div className="flex items-center gap-1.5 pl-1">
+            <span className="text-[9.5px] font-black px-1.5 py-0.5 rounded-full border border-teal-200 bg-teal-50 text-teal-850">
+              {patients.length} רשומים
+            </span>
+            <span className="text-xs text-slate-400 group-hover:-translate-x-1 transition-transform">◀</span>
           </div>
         </button>
       </div>

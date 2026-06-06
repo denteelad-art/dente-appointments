@@ -47,6 +47,9 @@ import { motion, AnimatePresence } from 'motion/react';
  */
 const playDenteRockAnthem = () => {
   try {
+    if (localStorage.getItem('dente_motivation_music_enabled') === 'false') {
+      return;
+    }
     const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
     if (!AudioContext) return;
     const ctx = new AudioContext();
@@ -269,6 +272,407 @@ const playDenteRockAnthem = () => {
   }
 };
 
+/**
+ * 1. Avicii-Inspired Electro Bassline Synthesizer Voice.
+ * Sounds upbeat, optimistic, and highly melodic!
+ */
+const playAviciiSynthMelody = () => {
+  try {
+    if (localStorage.getItem('dente_motivation_music_enabled') === 'false') {
+      return;
+    }
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    
+    const compressor = ctx.createDynamicsCompressor();
+    compressor.threshold.setValueAtTime(-12, ctx.currentTime);
+    compressor.connect(ctx.destination);
+    
+    const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(0.14, ctx.currentTime);
+    masterGain.connect(compressor);
+    
+    const bpm = 125;
+    const step = 60 / bpm / 2; // eighth notes (~0.24 seconds)
+    
+    const playPluck = (freq: number, startTime: number, vol = 0.5) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+      
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
+      
+      filter.type = 'lowpass';
+      filter.Q.setValueAtTime(3, ctx.currentTime + startTime);
+      filter.frequency.setValueAtTime(200, ctx.currentTime + startTime);
+      filter.frequency.exponentialRampToValueAtTime(1800, ctx.currentTime + startTime + 0.02);
+      filter.frequency.exponentialRampToValueAtTime(150, ctx.currentTime + startTime + 0.15);
+      
+      gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
+      gain.gain.linearRampToValueAtTime(vol, ctx.currentTime + startTime + 0.005);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startTime + 0.18);
+      
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(masterGain);
+      
+      osc.start(ctx.currentTime + startTime);
+      osc.stop(ctx.currentTime + startTime + 0.22);
+    };
+
+    const playBass = (freq: number, startTime: number) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
+      
+      gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
+      gain.gain.linearRampToValueAtTime(0.4, ctx.currentTime + startTime + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startTime + 0.25);
+      
+      osc.connect(gain);
+      gain.connect(masterGain);
+      
+      osc.start(ctx.currentTime + startTime);
+      osc.stop(ctx.currentTime + startTime + 0.3);
+    };
+    
+    const triggerKick = (startTime: number) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(150, ctx.currentTime + startTime);
+      osc.frequency.exponentialRampToValueAtTime(45, ctx.currentTime + startTime + 0.1);
+      
+      gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
+      gain.gain.linearRampToValueAtTime(1.0, ctx.currentTime + startTime + 0.005);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startTime + 0.15);
+      
+      osc.connect(gain);
+      gain.connect(masterGain);
+      
+      osc.start(ctx.currentTime + startTime);
+      osc.stop(ctx.currentTime + startTime + 0.18);
+    };
+
+    const triggerHat = (startTime: number) => {
+      const bufferSize = ctx.sampleRate * 0.1;
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+      
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.setValueAtTime(7000, ctx.currentTime + startTime);
+      
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
+      gain.gain.linearRampToValueAtTime(0.12, ctx.currentTime + startTime + 0.002);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startTime + 0.06);
+      
+      source.connect(filter);
+      filter.connect(gain);
+      gain.connect(masterGain);
+      
+      source.start(ctx.currentTime + startTime);
+      source.stop(ctx.currentTime + startTime + 0.08);
+    };
+
+    for (let stepIdx = 0; stepIdx < 16; stepIdx++) {
+      const time = stepIdx * step;
+      if (stepIdx % 4 === 0) {
+        triggerKick(time);
+      }
+      if (stepIdx % 4 === 2) {
+        triggerHat(time);
+      }
+      
+      if (stepIdx % 4 !== 0) {
+        let bassFreq = 110;
+        if (stepIdx >= 4 && stepIdx < 8) bassFreq = 87.3;
+        if (stepIdx >= 8 && stepIdx < 12) bassFreq = 130.8;
+        if (stepIdx >= 12) bassFreq = 98.0;
+        playBass(bassFreq, time);
+      }
+      
+      let majorArp = [440, 523, 659, 880];
+      if (stepIdx >= 4 && stepIdx < 8) majorArp = [349, 440, 523, 698];
+      if (stepIdx >= 8 && stepIdx < 12) majorArp = [261, 329, 392, 523];
+      if (stepIdx >= 12) majorArp = [293, 392, 493, 587];
+      
+      if (stepIdx % 4 === 0) {
+        playPluck(majorArp[0], time, 0.4);
+        playPluck(majorArp[2], time, 0.4);
+      } else if (stepIdx % 4 === 1) {
+        playPluck(majorArp[1], time + step * 0.5, 0.35);
+      } else if (stepIdx % 4 === 2) {
+        playPluck(majorArp[3], time, 0.5);
+      } else if (stepIdx % 4 === 3) {
+        playPluck(majorArp[2], time, 0.4);
+        playPluck(majorArp[0], time + step * 0.5, 0.3);
+      }
+    }
+  } catch (err) {
+    console.warn("Failed to play Avicii synth melody:", err);
+  }
+};
+
+/**
+ * 2. Retro Arcade Gaming Beat (Mortal Kombat Style) 🎮
+ * Energetic, fast synthesizer arpeggio riff with a hard driving techno kick and cyber hats.
+ */
+const playMortalKombatMelody = () => {
+  try {
+    if (localStorage.getItem('dente_motivation_music_enabled') === 'false') {
+      return;
+    }
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    
+    const compressor = ctx.createDynamicsCompressor();
+    compressor.threshold.setValueAtTime(-10, ctx.currentTime);
+    compressor.connect(ctx.destination);
+    
+    const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(0.18, ctx.currentTime);
+    masterGain.connect(compressor);
+    
+    const bpm = 138; // Techno gaming speed!
+    const step = 60 / bpm / 2; // ~0.217 seconds per step (eighth notes)
+
+    const playRetroPluck = (freq: number, startTime: number, isAccent = false) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      const filter = ctx.createBiquadFilter();
+      
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
+      
+      // Retro 16-bit lowpass envelope sweep
+      filter.type = 'lowpass';
+      filter.Q.setValueAtTime(isAccent ? 5 : 2, ctx.currentTime + startTime);
+      filter.frequency.setValueAtTime(100, ctx.currentTime + startTime);
+      filter.frequency.exponentialRampToValueAtTime(isAccent ? 3500 : 2000, ctx.currentTime + startTime + 0.02);
+      filter.frequency.exponentialRampToValueAtTime(250, ctx.currentTime + startTime + 0.15);
+      
+      // Volume envelope
+      gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
+      gain.gain.linearRampToValueAtTime(isAccent ? 0.7 : 0.45, ctx.currentTime + startTime + 0.005);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startTime + 0.16);
+      
+      osc.connect(filter);
+      filter.connect(gain);
+      gain.connect(masterGain);
+      
+      osc.start(ctx.currentTime + startTime);
+      osc.stop(ctx.currentTime + startTime + 0.2);
+    };
+
+    const triggerKick = (startTime: number) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(160, ctx.currentTime + startTime);
+      osc.frequency.exponentialRampToValueAtTime(48, ctx.currentTime + startTime + 0.09);
+      
+      gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
+      gain.gain.linearRampToValueAtTime(1.0, ctx.currentTime + startTime + 0.004);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startTime + 0.15);
+      
+      osc.connect(gain);
+      gain.connect(masterGain);
+      
+      osc.start(ctx.currentTime + startTime);
+      osc.stop(ctx.currentTime + startTime + 0.16);
+    };
+
+    const triggerClosedHat = (startTime: number) => {
+      const bufferSize = ctx.sampleRate * 0.05;
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) {
+        data[i] = Math.random() * 2 - 1;
+      }
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.setValueAtTime(8000, ctx.currentTime + startTime);
+      
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
+      gain.gain.linearRampToValueAtTime(0.12, ctx.currentTime + startTime + 0.002);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startTime + 0.04);
+      
+      source.connect(filter);
+      filter.connect(gain);
+      gain.connect(masterGain);
+      
+      source.start(ctx.currentTime + startTime);
+      source.stop(ctx.currentTime + startTime + 0.05);
+    };
+
+    // Frequencies of Mortal Kombat main riff notes in key of A-minor
+    const riff = [
+      440, 440, 523.25, 440, 587.33, 440, 659.25, 587.33, // A A C A D A E D
+      523.25, 523.25, 659.25, 523.25, 783.99, 523.25, 493.88, 392.00 // C C E C G C B G
+    ];
+
+    for (let i = 0; i < 16; i++) {
+      const time = i * step;
+      
+      // Techno Kick on beats 1, 5, 9, 13
+      if (i % 4 === 0) {
+        triggerKick(time);
+      }
+      // Off-beat Hit-hats on 3, 7, 11, 15
+      if (i % 4 === 2) {
+        triggerClosedHat(time);
+      }
+
+      // Play the iconic riff notes
+      const isAccent = (i % 4 === 0 || i === 4 || i === 6 || i === 12);
+      const freq = riff[i];
+      playRetroPluck(freq, time, isAccent);
+    }
+  } catch (err) {
+    console.warn("Failed to play Mortal Kombat synth melody:", err);
+  }
+};
+
+/**
+ * 3. Energetic Tribal Drums Percussive Beat.
+ * Absolute adrenaline-pumping rhythm with deep hand drum sweeps, clacks, and shakers!
+ */
+const playTribalDrumsMelody = () => {
+  try {
+    if (localStorage.getItem('dente_motivation_music_enabled') === 'false') {
+      return;
+    }
+    const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+    if (!AudioCtx) return;
+    const ctx = new AudioCtx();
+    
+    const compressor = ctx.createDynamicsCompressor();
+    compressor.threshold.setValueAtTime(-10, ctx.currentTime);
+    compressor.connect(ctx.destination);
+    
+    const masterGain = ctx.createGain();
+    masterGain.gain.setValueAtTime(0.24, ctx.currentTime);
+    masterGain.connect(compressor);
+    
+    const step = 0.22; // Quick fast tempo
+    
+    const triggerHandDrum = (startTime: number, freq = 90, vol = 0.8) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
+      osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + startTime + 0.12);
+      
+      gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
+      gain.gain.linearRampToValueAtTime(vol, ctx.currentTime + startTime + 0.005);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startTime + 0.18);
+      
+      osc.connect(gain);
+      gain.connect(masterGain);
+      
+      osc.start(ctx.currentTime + startTime);
+      osc.stop(ctx.currentTime + startTime + 0.22);
+    };
+
+    const triggerWoodblock = (startTime: number, freq = 900) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, ctx.currentTime + startTime);
+      osc.frequency.exponentialRampToValueAtTime(freq * 1.5, ctx.currentTime + startTime + 0.02);
+      
+      gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
+      gain.gain.linearRampToValueAtTime(0.5, ctx.currentTime + startTime + 0.002);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startTime + 0.05);
+      
+      osc.connect(gain);
+      gain.connect(masterGain);
+      
+      osc.start(ctx.currentTime + startTime);
+      osc.stop(ctx.currentTime + startTime + 0.08);
+    };
+
+    const triggerShaker = (startTime: number, vol = 0.08) => {
+      const bufferSize = ctx.sampleRate * 0.05;
+      const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+      
+      const source = ctx.createBufferSource();
+      source.buffer = buffer;
+      
+      const filter = ctx.createBiquadFilter();
+      filter.type = 'highpass';
+      filter.frequency.setValueAtTime(5000, ctx.currentTime + startTime);
+      
+      const gain = ctx.createGain();
+      gain.gain.setValueAtTime(0, ctx.currentTime + startTime);
+      gain.gain.linearRampToValueAtTime(vol, ctx.currentTime + startTime + 0.002);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + startTime + 0.035);
+      
+      source.connect(filter);
+      filter.connect(gain);
+      gain.connect(masterGain);
+      
+      source.start(ctx.currentTime + startTime);
+      source.stop(ctx.currentTime + startTime + 0.05);
+    };
+
+    for (let stepIdx = 0; stepIdx < 24; stepIdx++) {
+      const time = stepIdx * step;
+      if (stepIdx % 6 === 0 || stepIdx % 6 === 2 || stepIdx % 6 === 3) {
+        triggerHandDrum(time, stepIdx % 12 === 0 ? 100 : 85, 0.9);
+      }
+      if (stepIdx % 4 === 2) {
+        triggerWoodblock(time, 850);
+      }
+      if (stepIdx % 6 === 5) {
+        triggerWoodblock(time, 1150);
+        triggerWoodblock(time + step * 0.5, 950);
+      }
+      triggerShaker(time, 0.06);
+      triggerShaker(time + step * 0.5, 0.03);
+    }
+  } catch (err) {
+    console.warn("Failed to play tribal drums melody:", err);
+  }
+};
+
+/**
+ * Play whichever of the 4 dynamic melodies is currently selected.
+ */
+const playSelectedMotivationMelody = () => {
+  const chosen = localStorage.getItem('dente_motivation_melody_type') || 'rock';
+  if (chosen === 'rock') {
+    playDenteRockAnthem();
+  } else if (chosen === 'avicii') {
+    playAviciiSynthMelody();
+  } else if (chosen === 'success') {
+    playMortalKombatMelody();
+  } else if (chosen === 'tribal') {
+    playTribalDrumsMelody();
+  }
+};
+
 // --- 30 PREMIUM GENDER-TAILORED MOTIVATIONAL SALES QUOTES (FEMALE) ---
 const MOTIVATIONAL_FEMALE_QUOTES = [
   "בוקר מנצח אלופה! האנרגיה והחיוך שלך בטלפון הם המנוע האמיתי של סגירת המכירות היום, קדימה!",
@@ -342,14 +746,14 @@ const MOTIVATIONAL_MALE_QUOTES = [
 const SEED_REPRESENTATIVES: Representative[] = [
   {
     id: 'rep-1',
-    name: 'יובל כהן',
+    name: 'אלעד ריס',
     gender: 'male',
     role: 'admin',
     createdAt: new Date().toISOString()
   },
   {
     id: 'rep-2',
-    name: 'קורל אטיאס',
+    name: 'לינדה דור',
     gender: 'female',
     role: 'representative',
     createdAt: new Date().toISOString()
@@ -512,7 +916,7 @@ export default function App() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [representatives, setRepresentatives] = useState<Representative[]>(SEED_REPRESENTATIVES);
   const [activeRepresentativeId, setActiveRepresentativeId] = useState<string>(
-    () => localStorage.getItem('active_rep_id') || 'rep-1'
+    () => localStorage.getItem('active_rep_id') || ''
   );
 
   useEffect(() => {
@@ -561,6 +965,44 @@ export default function App() {
   type ThemeType = 'hospital-mint' | 'spicy-peach' | 'pink-strawberry' | 'sapphire-sky' | 'royal-gold';
   const [systemTheme, setSystemTheme] = useState<ThemeType>('hospital-mint');
   const [audioPlayed, setAudioPlayed] = useState(false);
+
+  const [isRepSwitcherOpen, setIsRepSwitcherOpen] = useState(false);
+
+  // Sound settings persistence
+  const [motivationMusicEnabled, setMotivationMusicEnabled] = useState<boolean>(
+    () => localStorage.getItem('dente_motivation_music_enabled') !== 'false'
+  );
+  const [chimeSoundEnabled, setChimeSoundEnabled] = useState<boolean>(
+    () => localStorage.getItem('dente_chime_sound_enabled') !== 'false'
+  );
+
+  useEffect(() => {
+    localStorage.setItem('dente_motivation_music_enabled', String(motivationMusicEnabled));
+  }, [motivationMusicEnabled]);
+
+  useEffect(() => {
+    localStorage.setItem('dente_chime_sound_enabled', String(chimeSoundEnabled));
+  }, [chimeSoundEnabled]);
+
+  // Compliment status & dynamic 10-minutes timer state
+  const [isComplimentVisible, setIsComplimentVisible] = useState<boolean>(true);
+  const [motivationMelodyType, setMotivationMelodyType] = useState<string>(
+    () => localStorage.getItem('dente_motivation_melody_type') || 'rock'
+  );
+
+  useEffect(() => {
+    localStorage.setItem('dente_motivation_melody_type', motivationMelodyType);
+  }, [motivationMelodyType]);
+
+  useEffect(() => {
+    setIsComplimentVisible(true);
+    // Hide compliment after 10 minutes (600,000 milliseconds)
+    const timeoutId = setTimeout(() => {
+      setIsComplimentVisible(false);
+    }, 10 * 60 * 1000);
+
+    return () => clearTimeout(timeoutId);
+  }, [activeRepresentativeId]);
 
   // SMS Portal States (to interface, pay, simulated logs and API keys)
   const [smsApiKey, setSmsApiKey] = useState('dente_premium_api_key_77bc');
@@ -612,6 +1054,7 @@ export default function App() {
   const [newRepLastName, setNewRepLastName] = useState('');
   const [newRepGender, setNewRepGender] = useState<'male' | 'female'>('male');
   const [newRepRole, setNewRepRole] = useState<'admin' | 'representative'>('representative');
+  const [newRepPin, setNewRepPin] = useState('');
   const [adminTimeFilter, setAdminTimeFilter] = useState<'day' | 'week' | 'month'>('month');
 
   // Rescheduling state for moving appointments with free navigation
@@ -1184,23 +1627,33 @@ export default function App() {
         });
       });
 
+      // Force migration to clear old fictional names and seed Elad Rees & Linda Dor
+      const hasPurgedV4 = localStorage.getItem('dente_has_purged_reps_v4') === 'true';
+      if (!hasPurgedV4) {
+        localStorage.setItem('dente_has_purged_reps_v4', 'true');
+        // Delete any existing items in snapshot
+        snapshot.forEach(async (docSnap) => {
+          try {
+            await deleteDoc(docSnap.ref);
+          } catch (e) {
+            console.error("Error deleting old rep:", e);
+          }
+        });
+        // Seed the new ones
+        SEED_REPRESENTATIVES.forEach(async (rep) => {
+          try {
+            await setDoc(doc(db, 'representatives', rep.id), rep);
+          } catch (e) {
+            console.error("Error seeding representative:", e);
+          }
+        });
+        setRepresentatives(SEED_REPRESENTATIVES);
+        return;
+      }
+
       if (data.length === 0) {
-        const hasSeededBefore = localStorage.getItem('dente_has_seeded_reps_v2') === 'true';
-        if (!hasSeededBefore) {
-          localStorage.setItem('dente_has_seeded_reps_v2', 'true');
-          setRepresentatives(SEED_REPRESENTATIVES);
-          SEED_REPRESENTATIVES.forEach(async (rep) => {
-            try {
-              await setDoc(doc(db, 'representatives', rep.id), rep);
-            } catch (e) {
-              console.error("Error seeding representative:", e);
-            }
-          });
-        } else {
-          setRepresentatives([]);
-        }
+        setRepresentatives([]);
       } else {
-        localStorage.setItem('dente_has_seeded_reps_v2', 'true');
         const sortedList = [...data];
         sortedList.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
         setRepresentatives(sortedList);
@@ -1295,6 +1748,9 @@ export default function App() {
   // Web Audio Synthesis for Copyright-Free 7-Eleven Sweet Double Bell Chime Sound
   const playOpeningChime = () => {
     try {
+      if (localStorage.getItem('dente_chime_sound_enabled') === 'false') {
+        return;
+      }
       const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
       if (!AudioCtx) return;
       const ctx = new AudioCtx();
@@ -2396,10 +2852,11 @@ export default function App() {
 
   // Active Representative computed info
   const activeRep = representatives.find(r => r.id === activeRepresentativeId) || {
-    id: 'rep-1',
-    name: 'יובל כהן',
-    role: 'admin' as const,
-    gender: 'male' as const
+    id: '',
+    name: 'בחר משתמש לתחנה ⚠️',
+    role: 'guest' as any,
+    gender: 'male' as const,
+    isPlaceholder: true
   };
 
   // Stable pseudorandom gender-tailored motivational banner picker
@@ -2434,7 +2891,7 @@ export default function App() {
         localStorage.setItem('dente_logged_in', 'true');
         showToast("חיבור מאובטח אושר", "ברוכים הבאים למערכת DENTE!", "success");
         setLoginError('');
-        playDenteRockAnthem(); // Play the custom motivating sound!
+        playSelectedMotivationMelody(); // Play the custom motivating sound!
       } else {
         setLoginError("שם משתמש או סיסמה שגויים. נסו שוב.");
       }
@@ -2513,10 +2970,10 @@ export default function App() {
       
       {/* Top Professional Header Bar in soothing pastel gradients with DENTE Specialists brand */}
       <header className={`bg-white border-b ${themeConfig.headerBorder} px-6 py-4 flex flex-col sm:flex-row items-center justify-between gap-4 sticky top-0 z-40`} id="clinic-header">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-5">
           {/* Custom SVG Logo representation of DENTE מומחים פה ולסת using professional Golden Tooth & Implant Screw design without dark background */}
           <div className="flex items-center justify-center p-1 hover:scale-105 transition-transform duration-200" id="dente-specialists-logo">
-            <svg width="70" height="70" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <svg width="112" height="112" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
               {/* THE SHINY SOLID GOLD TOOTH CROWN & CLINICAL IMPLANT SCREW - Rendered beautifully directly on modern background */}
               {/* Soft gold backing aura glow to make the implant look magnificent and pop */}
               <circle cx="60" cy="60" r="30" fill="url(#gold-aura-glow)" opacity="0.12" />
@@ -2715,10 +3172,10 @@ export default function App() {
             </svg>
           </div>
           <div className="text-right">
-            <h1 className="text-base font-extrabold text-slate-800 tracking-tight flex items-center gap-2">
+            <h1 className="text-xl md:text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
               DENTE מרפאת מומחים פה ולסת
             </h1>
-            <p className="text-[11px] text-slate-500 font-bold flex flex-wrap items-center gap-1.5 mt-0.5">
+            <p className="text-[14.5px] text-slate-500 font-bold flex flex-wrap items-center gap-2 mt-1">
               <span className={themeConfig.accentText}>רוזנסקי 4, ראשון לציון (קומה 3)</span>
               <span className="text-slate-300">|</span>
               <span className="text-slate-500 font-semibold">לוח תיאום וניהול תורים</span>
@@ -2729,20 +3186,65 @@ export default function App() {
         {/* Live System Time and Statistics */}
         <div className="flex flex-wrap items-center gap-4 sm:gap-6" id="header-metadata-box">
 
-          <div className={`${themeConfig.statsBg} px-3.5 py-1.5 rounded-xl border ${themeConfig.statsBorder} flex items-center gap-2`}>
-            <UserIcon className={`w-4 h-4 ${themeConfig.statsText} shrink-0`} />
-            <div className="text-right font-medium">
-              <span className={`block text-[8px] font-extrabold ${themeConfig.statsText} uppercase font-sans tracking-wider`}>משתמש תחנה פעיל</span>
-              <span className="text-xs font-bold text-slate-800 flex items-center gap-1">
-                שלום, {activeRep.name}
-                <span className={`text-[8px] px-1.5 py-0.2 rounded-full border font-black ${
-                  activeRep.role === 'admin' 
-                    ? 'bg-amber-50 border-amber-200 text-amber-800 shadow-3xs' 
-                    : 'bg-emerald-50 border-emerald-200 text-emerald-800'
-                }`}>
-                  {activeRep.role === 'admin' ? 'מנהל 👑' : 'נציג מורשה'}
-                </span>
+          <div 
+            onClick={() => setIsRepSwitcherOpen(true)}
+            className={`px-3.5 py-1.5 rounded-xl border flex items-center gap-2 cursor-pointer transition-all duration-500 select-none active:scale-[0.98] ${
+              activeRep.isPlaceholder 
+                ? 'bg-rose-50/90 border-rose-300 hover:bg-rose-100/90 hover:border-rose-400 text-rose-700 shadow-md shadow-rose-100/40 animate-pulse' 
+                : `${themeConfig.statsBg} ${themeConfig.statsBorder} hover:bg-slate-100/55 text-slate-800`
+            }`}
+            title="לחץ כאן כדי לבחור או להחליף נציג תחנה פעיל 👥"
+          >
+            <UserIcon className={`w-4 items-center h-4 shrink-0 ${activeRep.isPlaceholder ? 'text-rose-600' : themeConfig.statsText}`} />
+            <div className="text-right font-medium flex flex-col justify-center">
+              <span className={`text-[11px] font-extrabold uppercase font-sans tracking-wider flex items-center gap-1.5 ${
+                activeRep.isPlaceholder ? 'text-rose-500' : themeConfig.statsText
+              }`}>
+                <span>משתמש תחנה פעיל</span>
+                {activeRep.isPlaceholder && (
+                  <span className="text-[10px] font-black font-sans px-1.5 py-0.5 rounded bg-rose-600 text-white animate-bounce">
+                    בחר עיקרי ⇄
+                  </span>
+                )}
               </span>
+              {activeRep.isPlaceholder ? (
+                <span className="text-sm font-black text-rose-700 block mt-0.5">
+                  בחר משתמש עכשיו ⚠️
+                </span>
+              ) : (
+                <span className="text-[14.5px] font-extrabold text-slate-800 flex flex-wrap items-center gap-1.5 mt-0.5 transition-all duration-500">
+                  <span>שלום, {activeRep.name}</span>
+                  
+                  {isComplimentVisible && (
+                    <span className="text-teal-700 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-md text-[11.5px] font-black animate-pulse whitespace-nowrap">
+                      {activeRep.role === 'admin' 
+                        ? (activeRep.gender === 'female' ? 'המנהלת האלופה והמנצחת! 👑✨' : 'המנהל האלוף והתותח! 👑✨')
+                        : (activeRep.gender === 'female' ? 'הנציגה האלופה שלנו! 🪻' : 'הנציג האלוף שלנו! 🦁')
+                      }
+                    </span>
+                  )}
+
+                  <span className={`text-[10.5px] px-2 py-0.5 rounded-full border font-black flex items-center gap-1 shrink-0 ${
+                    activeRep.role === 'admin' 
+                      ? 'bg-amber-50 border-amber-200 text-amber-800 shadow-3xs' 
+                      : 'bg-emerald-50 border-emerald-200 text-emerald-800'
+                  }`}>
+                    {activeRep.role === 'admin' ? (
+                      <span className="flex items-center gap-1">
+                        מנהל <span className="text-[20px] inline-block animate-bounce focus:outline-hidden" style={{ transformOrigin: 'bottom' }}>👑</span>
+                      </span>
+                    ) : activeRep.gender === 'female' ? (
+                      <span className="flex items-center gap-1">
+                        נציגה מורשת <span className="text-[19px] inline-block animate-pulse">🪻</span>
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-1">
+                        נציג מורשה <span className="text-[19.5px]">🦁👔</span>
+                      </span>
+                    )}
+                  </span>
+                </span>
+              )}
             </div>
           </div>
 
@@ -2769,9 +3271,9 @@ export default function App() {
           {/* 🎵 Motivational Anthem Button */}
           <button
             type="button"
-            onClick={playDenteRockAnthem}
+            onClick={playSelectedMotivationMelody}
             className="flex items-center gap-1.5 px-3 py-2 text-xs font-black text-teal-700 bg-teal-50 hover:bg-teal-100/80 rounded-xl transition-all border border-teal-200/50 cursor-pointer shadow-3xs active:scale-[0.97]"
-            title="הפעל מנגינת מוטיבציה מלהיבה (DENTE Rock Anthem) 🎵"
+            title="הפעל מנגינת מוטיבציה מלהיבה נבחרת 🎵"
           >
             <span className="text-sm select-none">🎵</span>
             <span>קצב מוטיבציה!</span>
@@ -2876,16 +3378,175 @@ export default function App() {
             appointments={appointments}
             onUpdatePatient={handleUpdatePatient}
             representatives={representatives}
+            borderClass={themeConfig.border}
+            accentTextClass={themeConfig.accentText}
           />
 
           {/* DENTE Modern Control Center Options */}
           <div className="space-y-3" id="system-quick-controls">
+            {/* 🎵 Sound & Motivation Audio Settings Widget */}
+            <div 
+              className={`bg-white rounded-2xl border ${themeConfig.border} shadow-2xs hover:shadow-xs transition-all overflow-hidden text-right w-full`}
+              title="בקרת צלילים ומוטיבציה: הגדרת צלילי פעמון כפול להרגעת מטופלים, הפעלת נעימות או לופים של קצב מוטיבציה שונים"
+            >
+              <div className="p-4 space-y-3">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center shrink-0">
+                      <span className="text-base select-none">🔊</span>
+                    </div>
+                    <div className="text-right">
+                      <h3 className="text-xs font-black text-slate-800 leading-tight">בקרת צלילים ומוטיבציה</h3>
+                      <p className="text-[10px] text-slate-500 font-bold mt-0.5">הפעלה, השתקה ובחירת נעימות שמע מלהיבות</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  {/* Switch 1: Motivational Rock Anthem */}
+                  <div className="flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-150">
+                    <div className="text-right max-w-[180px]">
+                      <span className="block text-[10px] font-black text-slate-700 leading-tight">מנגינת מוטיבציה שוטפת</span>
+                      <span className="block text-[8px] text-slate-400 font-bold mt-0.5 font-sans">הפעלת לולאת קצב חכמה לטעינת הישגים</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const nextVal = !motivationMusicEnabled;
+                        setMotivationMusicEnabled(nextVal);
+                        localStorage.setItem('dente_motivation_music_enabled', String(nextVal));
+                        if (nextVal) {
+                          setTimeout(() => playSelectedMotivationMelody(), 100);
+                        }
+                      }}
+                      className={`relative inline-flex h-4.5 w-8 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+                        motivationMusicEnabled ? 'bg-teal-500' : 'bg-slate-350'
+                      }`}
+                      title="לחצו להפעלה או השתקה של מוזיקת הרקע הקצבית לטעינת המשרד באנרגיות מדהימות"
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                          motivationMusicEnabled ? '-translate-x-3.5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Switch 2: Opening/Creation 7-Eleven Chime */}
+                  <div className="flex items-center justify-between bg-slate-50 p-2.5 rounded-xl border border-slate-150">
+                    <div className="text-right max-w-[180px]">
+                      <span className="block text-[10px] font-black text-slate-700 leading-tight">פעמון כניסה להרגעת מטופלים</span>
+                      <span className="block text-[8px] text-slate-400 font-bold mt-0.5 font-sans">צליל כפול ייחודי בשמירה ופתיחה</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const nextVal = !chimeSoundEnabled;
+                        setChimeSoundEnabled(nextVal);
+                        localStorage.setItem('dente_chime_sound_enabled', String(nextVal));
+                        if (nextVal) {
+                          setTimeout(() => playOpeningChime(), 100);
+                        }
+                      }}
+                      className={`relative inline-flex h-4.5 w-8 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden ${
+                        chimeSoundEnabled ? 'bg-teal-500' : 'bg-slate-350'
+                      }`}
+                      title="הפעילו או השביתו את צליל הפעמון המקצועי להרגעת מטופלים המלווה אותנו בכל כניסה ויצירת פעולות"
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                          chimeSoundEnabled ? '-translate-x-3.5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
+
+                  {/* Choice of 4 unique synthesized custom backing tracks */}
+                  <div className="border-t border-slate-100 pt-2 mt-1 space-y-1.5 text-right">
+                    <span className="block text-[9.5px] font-black text-slate-500 leading-tight">בחר נעימת רקע מלהיבה:</span>
+                    
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {/* Melody Type Selector Grid */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMotivationMelodyType('rock');
+                          localStorage.setItem('dente_motivation_melody_type', 'rock');
+                          setTimeout(() => playDenteRockAnthem(), 50);
+                        }}
+                        className={`text-[9.5px] font-black py-1.5 px-1 rounded-lg border text-center transition-all cursor-pointer ${
+                          motivationMelodyType === 'rock'
+                            ? 'bg-amber-50 border-amber-300 text-amber-800 shadow-3xs scale-98 font-bold'
+                            : 'bg-white border-slate-150 hover:bg-slate-50 text-slate-650'
+                        }`}
+                        title="DENTE Heavy Rock Anthem 🎸"
+                      >
+                        🎸 רוק קצבי
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMotivationMelodyType('avicii');
+                          localStorage.setItem('dente_motivation_melody_type', 'avicii');
+                          setTimeout(() => playAviciiSynthMelody(), 50);
+                        }}
+                        className={`text-[9.5px] font-black py-1.5 px-1 rounded-lg border text-center transition-all cursor-pointer ${
+                          motivationMelodyType === 'avicii'
+                            ? 'bg-indigo-50 border-indigo-300 text-indigo-800 shadow-3xs scale-98 font-bold'
+                            : 'bg-white border-slate-150 hover:bg-slate-50 text-slate-650'
+                        }`}
+                        title="Avicii Tribute Synth House ◢ ◤"
+                      >
+                        ◢ ◤ אביצ'י האוס
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMotivationMelodyType('success');
+                          localStorage.setItem('dente_motivation_melody_type', 'success');
+                          setTimeout(() => playMortalKombatMelody(), 50);
+                        }}
+                        className={`text-[9.5px] font-black py-1.5 px-1 rounded-lg border text-center transition-all cursor-pointer ${
+                          motivationMelodyType === 'success'
+                            ? 'bg-emerald-50 border-emerald-300 text-emerald-800 shadow-3xs scale-98 font-bold'
+                            : 'bg-white border-slate-150 hover:bg-slate-50 text-slate-650'
+                        }`}
+                        title="Mortal Kombat Retro Synth 🎮"
+                      >
+                        🎮 מורטל קומבט
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMotivationMelodyType('tribal');
+                          localStorage.setItem('dente_motivation_melody_type', 'tribal');
+                          setTimeout(() => playTribalDrumsMelody(), 50);
+                        }}
+                        className={`text-[9.5px] font-black py-1.5 px-1 rounded-lg border text-center transition-all cursor-pointer ${
+                          motivationMelodyType === 'tribal'
+                            ? 'bg-rose-50 border-rose-300 text-rose-800 shadow-3xs scale-98 font-bold'
+                            : 'bg-white border-slate-150 hover:bg-slate-50 text-slate-650'
+                        }`}
+                        title="Tribal Power Percussion Beat 🥁"
+                      >
+                        🥁 תופים שבטיים
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* 1. Design Config Button (עיצוב) */}
             <div className={`bg-white rounded-2xl border ${themeConfig.border} shadow-2xs hover:shadow-xs transition-all overflow-hidden text-right`}>
               <button
                 type="button"
                 onClick={() => setIsDesignModalOpen(true)}
                 className="w-full flex items-center justify-between p-4 hover:bg-slate-50 text-right transition-all duration-155 group cursor-pointer border-none"
+                title="לחצו להחלפת נושא עיצוב האפליקציה (גוונים שונים), הגדרת ספקי הודעות WhatsApp וסיווגי תורים מותאמים אישית"
               >
                 <div className="flex items-center gap-3">
                   <div className="p-2.5 bg-rose-50 text-rose-600 rounded-xl group-hover:scale-105 transition-all flex items-center justify-center">
@@ -2908,6 +3569,7 @@ export default function App() {
                 type="button"
                 onClick={() => setIsUsersManagementModalOpen(true)}
                 className="w-full flex items-center justify-between p-4 hover:bg-slate-50 text-right transition-all duration-155 group cursor-pointer border-none"
+                title="לחצו לניהול משתמשים ונציגים מורשים: רישום זהויות תחנה, עדכון והוספת מנהלים, והגדרת קודי PIN לאימות מאובטח"
               >
                 <div className="flex items-center gap-3">
                   <div className="p-2.5 bg-amber-50 text-amber-600 rounded-xl group-hover:scale-105 transition-all flex items-center justify-center">
@@ -2937,6 +3599,7 @@ export default function App() {
                 type="button"
                 onClick={() => setIsBackupRestoreModalOpen(true)}
                 className="w-full flex items-center justify-between p-4 hover:bg-slate-50 text-right transition-all duration-155 group cursor-pointer border-none"
+                title="לחצו לגיבוי ושחזור נתונים בזמן אמת: יצירת קובץ נתונים להורדה מקומית או שחזור והחלפה מלאה של הנתונים בענן"
               >
                 <div className="flex items-center gap-3">
                   <div className="p-2.5 bg-teal-50 text-teal-600 rounded-xl group-hover:scale-105 transition-all flex items-center justify-center">
@@ -2968,6 +3631,7 @@ export default function App() {
                 type="button"
                 onClick={() => setIsPrintReportModalOpen(true)}
                 className="w-full flex items-center justify-between p-4 hover:bg-slate-50 text-right transition-all duration-155 group cursor-pointer border-none"
+                title="לחצו להפקת רשימת תורים וטיפולים יומית נוחה להדפסה או ייצוא מהיר, ממוינת לפי זמנים ונציגים מטפלים"
               >
                 <div className="flex items-center gap-3">
                   <div className="p-2.5 bg-sky-50 text-sky-600 rounded-xl group-hover:scale-105 transition-all flex items-center justify-center">
@@ -2975,7 +3639,7 @@ export default function App() {
                   </div>
                   <div className="text-right">
                     <h3 className="text-xs font-black text-slate-800 leading-tight">דוח תורים יומי</h3>
-                    <p className="text-[10px] text-slate-500 font-bold mt-0.5 font-sans">הפקת רשימת ייעוצים יומית והדפסה</p>
+                    <p className="text-[10px] text-slate-500 font-bold mt-0.5 font-sans">הפקת רשימת ייעوצים יומית והדפסה</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 pl-1">
@@ -3904,14 +4568,16 @@ export default function App() {
         </div>
       )}
 
-      {/* 🔐 Admin Password Prompt Modal */}
+       {/* 🔐 Admin Password Prompt Modal */}
       {adminPasswordPrompt.isOpen && (() => {
         const displayList = representatives.length > 0 ? representatives : SEED_REPRESENTATIVES;
-        const targetRepName = displayList.find(r => r.id === adminPasswordPrompt.pendingRepId)?.name || 'מנהל';
+        const targetRep = displayList.find(r => r.id === adminPasswordPrompt.pendingRepId);
+        const targetRepName = targetRep?.name || 'מנהל';
+        const targetRepPin = targetRep?.pinCode || '2020';
         
         const handleVerifyCode = (e: React.FormEvent) => {
           e.preventDefault();
-          if (adminPasswordInput === '2020') {
+          if (adminPasswordInput === targetRepPin) {
             if (adminPasswordPrompt.pendingRepId) {
               setActiveRepresentativeId(adminPasswordPrompt.pendingRepId);
             }
@@ -4112,6 +4778,112 @@ export default function App() {
         </div>
       )}
 
+      {/* 👥 Dynamic Representative/Station Switcher Modal */}
+      {isRepSwitcherOpen && (
+        <div 
+          onClick={() => setIsRepSwitcherOpen(false)}
+          className="fixed inset-0 z-[10002] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-200 cursor-pointer" 
+          dir="rtl"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()} 
+            className="bg-white max-w-sm w-full rounded-2xl shadow-2xl border border-slate-100 flex flex-col p-6 text-right space-y-4 animate-in zoom-in-95 duration-200 cursor-default"
+          >
+            <div className="flex items-start justify-between border-b border-slate-100 pb-3">
+              <div className="flex items-start gap-3">
+                <div className="p-2.5 bg-teal-50 text-teal-600 rounded-xl flex items-center justify-center shrink-0">
+                  <span className="text-xl">🔄</span>
+                </div>
+                <div className="text-right">
+                  <h3 className="font-extrabold text-slate-800 text-sm leading-tight">החלפת נציג תחנה פעיל</h3>
+                  <p className="text-[10px] text-slate-500 font-bold mt-1">בחר את זהות המשתמש הפעיל כעת במחשב זה</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsRepSwitcherOpen(false)}
+                className="text-slate-400 hover:text-slate-650 p-1.5 hover:bg-slate-100 rounded-lg transition-all cursor-pointer"
+              >
+                <span className="text-xs font-black">✕</span>
+              </button>
+            </div>
+
+            <div className="space-y-1.5 max-h-[40vh] overflow-y-auto pr-1">
+              {representatives.map((rep) => {
+                const isActive = rep.id === activeRepresentativeId;
+                return (
+                  <button
+                    key={rep.id}
+                    type="button"
+                    onClick={() => {
+                      setIsRepSwitcherOpen(false);
+                      const applyChange = () => {
+                        if (rep.role === 'admin') {
+                          setAdminPasswordPrompt({
+                            isOpen: true,
+                            pendingRepId: rep.id,
+                            errorMsg: ''
+                          });
+                          setAdminPasswordInput('');
+                        } else {
+                          setActiveRepresentativeId(rep.id);
+                          showToast(
+                            "הנציג הוחלף בהצלחה 👥",
+                            `תחנת העבודה פתוחה כעת תחת השם: ${rep.name}`,
+                            "success"
+                          );
+                        }
+                      };
+
+                      showConfirm(
+                        'אישור החלפת נציג תחנה',
+                        `האם ברצונכם להעביר את תחנת העבודה הזו לניהולו/ה של ${rep.name}?`,
+                        () => applyChange(),
+                        () => {},
+                        'החלף',
+                        'ביטול'
+                      );
+                    }}
+                    className={`w-full flex items-center justify-between p-3 rounded-xl border transition-all text-right cursor-pointer ${
+                      isActive 
+                        ? 'bg-teal-50/70 border-teal-300 shadow-3xs' 
+                        : 'bg-white border-slate-150 hover:bg-slate-50 hover:border-slate-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                        rep.role === 'admin' 
+                          ? 'bg-amber-100 text-amber-800' 
+                          : 'bg-teal-100 text-teal-800'
+                      }`}>
+                        {rep.gender === 'female' ? '👩‍⚕️' : '👨‍⚕️'}
+                      </div>
+                      <div className="text-right">
+                        <span className="block text-xs font-black text-slate-800">{rep.name}</span>
+                        <span className="block text-[9px] text-slate-500 font-extrabold mt-0.5">
+                          {rep.role === 'admin' ? 'מנהל מערכת 👑' : 'נציג שירות ומכירות'}
+                        </span>
+                      </div>
+                    </div>
+                    {isActive && (
+                      <span className="text-[9px] bg-teal-500 text-white font-black px-2 py-0.5 rounded-full select-none">
+                        פעיל
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            
+            <div className="pt-2 text-center">
+              <p className="text-[9px] text-slate-400 font-extrabold leading-normal">
+                * כל פעולה (הקצאת תור, שליחת SMS, שינוי סטטוס) תירשם תחת המשתמש הפעיל.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 👥 Users & Representatives Management Modal ("ניהול משתמשים ונציגים מורשים") */}
       {isUsersManagementModalOpen && (
         <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-in fade-in duration-200" dir="rtl">
@@ -4245,6 +5017,20 @@ export default function App() {
                       </div>
                     </div>
 
+                    {newRepRole === 'admin' && (
+                      <div className="bg-amber-50/50 p-3 rounded-xl border border-amber-150 space-y-1">
+                        <label className="block text-[9.5px] text-amber-800 font-extrabold">בחר קוד PIN מנהל סודי (4 ספרות):*</label>
+                        <input
+                          type="text"
+                          maxLength={4}
+                          value={newRepPin}
+                          onChange={(e) => setNewRepPin(e.target.value.replace(/\D/g, ''))}
+                          placeholder="לדוגמה: 2026"
+                          className="w-full text-center px-3 py-1.5 text-xs bg-white border border-amber-200 rounded-xl text-slate-800 font-mono tracking-widest font-black focus:border-amber-400 focus:ring-2 focus:ring-amber-100 outline-none"
+                        />
+                      </div>
+                    )}
+
                     <button
                       type="button"
                       onClick={async () => {
@@ -4278,12 +5064,26 @@ export default function App() {
                           return;
                         }
 
+                        if (newRepRole === 'admin' && (!newRepPin || newRepPin.trim().length !== 4)) {
+                          showConfirm(
+                            'שגיאה ברישום מנהל',
+                            'נא להזין קוד PIN סודי מוגדר מראש המורכב מ-4 ספרות בדיוק עבור המנהל החדש.',
+                            () => {},
+                            undefined,
+                            'אישור לאימות',
+                            'ביטול',
+                            true
+                          );
+                          return;
+                        }
+
                         const newId = `rep-${Date.now()}`;
                         const newRepObj: Representative = {
                           id: newId,
                           name: fullName,
                           gender: newRepGender,
                           role: newRepRole,
+                          pinCode: newRepRole === 'admin' ? newRepPin : undefined,
                           createdAt: new Date().toISOString()
                         };
 
@@ -4299,6 +5099,7 @@ export default function App() {
                           
                           setNewRepFirstName('');
                           setNewRepLastName('');
+                          setNewRepPin('');
                           showConfirm(
                             'הרשמה הושלמה בהצלחה',
                             `הנציג/ה ${newRepObj.name} התווסף למערכת והסנכרון הושלם בהצלחה בזמן אמת! כעת ניתן לבחור בו תחת "זהות המשתמש בתחנת מחשב זו".`,

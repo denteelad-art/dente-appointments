@@ -34,5 +34,6 @@ export interface Representative {
   name: string;
   gender: 'male' | 'female';
   role: 'admin' | 'representative';
+  pinCode?: string;
   createdAt: string;
 }
